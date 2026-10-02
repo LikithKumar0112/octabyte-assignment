@@ -12,7 +12,7 @@ provider "aws" {
     region = var.aws_region
     default_tags {
         tags = {
-            Project     = var.project
+            Project     = var.project_name
             Environment = var.environment
             Owner       = var.owner
         }

@@ -8,3 +8,5 @@ single_nat_gateway = true
 
 app_port = 8080
 app_image = "my-docker-image:latest"
+
+
