@@ -3,18 +3,18 @@ terraform {
   required_providers {
     aws = {
       source  = "hashicorp/aws"
-      version = "~> 5.0"
+      version = "~> 60.0"
     }
   }
 }
 
 provider "aws" {
-  region = var.region
+  region = var.aws_region
   default_tags {
     tags = {
       Project     = var.project
-      environment = "shared"
-      managed_by  = "Terraform"
+      Environment = var.environment
+      Owner       = var.owner
     }
   }
 }
