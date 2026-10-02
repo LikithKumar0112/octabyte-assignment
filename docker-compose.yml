@@ -1,0 +1,34 @@
+services:
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: octabyte_user
+      POSTGRES_PASSWORD: octabyte_password
+      POSTGRES_DB: octabyte_db
+    ports:
+      - "5430:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U octabyte_user"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+  app:
+    build: ./app
+    ports:
+      - "8000:8000"
+    environment:
+      PORT: 8000
+      ENVIRONMENT: local
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_NAME: octabyte_db
+      DB_USER: octabyte_user
+      DB_PASSWORD: octabyte_password  
+    depends_on:
+        db:
+          condition: service_healthy
+
+volumes:
+  db_data:

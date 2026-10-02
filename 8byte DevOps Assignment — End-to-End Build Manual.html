@@ -1,0 +1,1143 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}</style><style>:root{color-scheme:light dark;--md-bg:#fff;--md-text:rgba(0,0,0,.8);--md-muted:rgba(0,0,0,.6);--md-fill:rgba(0,0,0,.04);--md-fill-strong:rgba(0,0,0,.06);--md-rule:rgba(0,0,0,.1);--md-rule-strong:rgba(0,0,0,.16);--md-link:hsl(210 100% 45%)}@media (prefers-color-scheme:dark){:root:where(:not([data-theme="light"])){--md-bg:#0d0d0d;--md-text:rgba(255,255,255,.85);--md-muted:rgba(255,255,255,.6);--md-fill:rgba(255,255,255,.06);--md-fill-strong:rgba(255,255,255,.09);--md-rule:rgba(255,255,255,.14);--md-rule-strong:rgba(255,255,255,.22);--md-link:hsl(210 100% 72%)}}:root[data-theme="dark"]{color-scheme:dark;--md-bg:#0d0d0d;--md-text:rgba(255,255,255,.85);--md-muted:rgba(255,255,255,.6);--md-fill:rgba(255,255,255,.06);--md-fill-strong:rgba(255,255,255,.09);--md-rule:rgba(255,255,255,.14);--md-rule-strong:rgba(255,255,255,.22);--md-link:hsl(210 100% 72%)}:root[data-theme="light"]{color-scheme:light}@media print{:root,:root[data-theme="dark"]{color-scheme:light;--md-bg:#fff;--md-text:rgba(0,0,0,.8);--md-muted:rgba(0,0,0,.6);--md-fill:rgba(0,0,0,.04);--md-fill-strong:rgba(0,0,0,.06);--md-rule:rgba(0,0,0,.1);--md-rule-strong:rgba(0,0,0,.16);--md-link:hsl(210 100% 45%)}}body{background:var(--md-bg);color:var(--md-text);max-width:720px;margin:0 auto;padding:32px;display:flex;flex-direction:column;gap:10px;font:14px/1.55 -apple-system,BlinkMacSystemFont,'SF Pro','Segoe UI',sans-serif;overflow-wrap:break-word}body>:first-child{margin-top:0}h1,h2,h3,h4,h5,h6{margin:6px 0 0;line-height:1.25;font-weight:600;text-wrap:balance}h1{font-size:1.35em}h2{font-size:1.15em;color:var(--md-muted)}h3,h4,h5,h6{font-size:1em}p,ul,ol,blockquote,table,pre,hr{margin:0}strong{font-weight:600}a{color:var(--md-link);text-decoration:none}a:hover{text-decoration:underline}ul,ol{display:flex;flex-direction:column;gap:6px;padding-left:22px}ul{list-style:disc}ol{list-style:decimal}:is(li,td,th)>*+:is(p,ul,ol,blockquote){margin-top:6px}blockquote{display:flex;flex-direction:column;gap:10px;border-left:2px solid var(--md-rule);padding-left:10px;color:var(--md-muted)}:not(pre)>code{background:var(--md-fill);padding:1px 3px;border-radius:4px;font:.92em 'SF Mono',ui-monospace,Menlo,Consolas,monospace}a>code{background:none;color:inherit}pre{background:var(--md-fill);padding:10px 12px;border-radius:6px;overflow-x:auto;font:12px/1.5 'SF Mono',ui-monospace,Menlo,Consolas,monospace;margin-block:4px}pre code{background:none;padding:0;font:inherit}table{width:100%;border-collapse:separate;border-spacing:2px;font:inherit}th,td{padding:6px 8px;border-radius:3px;text-align:left;vertical-align:top}th{background:var(--md-fill-strong);font-weight:600}td{background:var(--md-fill)}:is(th,td) :not(pre)>code{background:transparent}hr{border:0;border-top:1px solid var(--md-rule-strong);margin-block:10px}img{max-width:100%;height:auto;border-radius:4px}</style>
+</head><body>
+<h1>8byte DevOps Assignment — End-to-End Build Manual</h1>
+<p><em>A field guide for building, documenting and presenting the assignment yourself. This manual tells you <strong>what</strong> to build, <strong>in what order</strong>, <strong>which resources and settings matter</strong>, <strong>which official documentation to read for each piece</strong>, and <strong>how to justify every decision</strong>. It deliberately does not hand you finished code — you write every line, which is exactly what the company is checking for.</em></p>
+<hr>
+<h2>0. How to use this manual</h2>
+<p>Read sections 1–4 fully before touching a keyboard. Then work through the phases (5 → 10) in order; each phase ends with a <strong>&quot;Done when&quot;</strong> checklist so you know you can move on. Keep two files open from the very first minute:</p>
+<ol>
+<li><strong><code>CHALLENGES.md</code> (scratch log)</strong> — every time something breaks, write down: what you tried, the error message, the root cause, and the fix. This becomes your Challenges PDF/Word document at the end with almost no extra effort, and it is genuinely the most convincing evidence of original work.</li>
+<li><strong>A notes file of &quot;decisions&quot;</strong> — every time you choose X over Y (ECS vs EKS, one NAT vs two), write one sentence on why. This becomes the &quot;Architecture decisions&quot; section of your README.</li>
+</ol>
+<p><strong>Commit small and often</strong> with meaningful messages (<code>feat(network): add private subnets and NAT gateway</code>, <code>fix(ecs): use ip target type for Fargate</code>). A realistic git history with mistakes and fixes is one of the strongest signals of genuine authorship. Don't squash everything into one giant commit at the end.</p>
+<p><strong>Happy path first.</strong> The PDF says it explicitly. Get one working environment end-to-end (code → image → staging running behind the load balancer) before adding polish. Polish items are marked <strong>[Extra]</strong> throughout this manual.</p>
+<hr>
+<h2>1. What is actually being evaluated</h2>
+<p>Map every requirement to a concrete artifact so nothing is missed. Print this table and tick it off.</p>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Requirement (from PDF)</th>
+<th>What you will deliver</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1.1</td>
+<td>VPC with public &amp; private subnets</td>
+<td><code>modules/network</code> — VPC, 2 public + 2 private-app + 2 private-db subnets across 2 AZs, IGW, NAT</td>
+</tr>
+<tr>
+<td>1.1</td>
+<td>EC2 or ECS/EKS hosting</td>
+<td><code>modules/ecs</code> — ECS cluster on Fargate, service, task definition, autoscaling</td>
+</tr>
+<tr>
+<td>1.1</td>
+<td>RDS PostgreSQL</td>
+<td><code>modules/rds</code> — encrypted, private, managed password in Secrets Manager</td>
+</tr>
+<tr>
+<td>1.1</td>
+<td>Security groups</td>
+<td>ALB SG → App SG → DB SG chain (least privilege)</td>
+</tr>
+<tr>
+<td>1.1</td>
+<td>Load balancer for frontend</td>
+<td><code>modules/alb</code> — internet-facing ALB, target group, listener, access logs</td>
+</tr>
+<tr>
+<td>1.2</td>
+<td><code>variables.tf</code></td>
+<td>Every module and environment has one, with descriptions, types, validation</td>
+</tr>
+<tr>
+<td>1.3</td>
+<td>State management</td>
+<td>S3 remote backend, versioned + encrypted bucket, native S3 locking, separate state per environment</td>
+</tr>
+<tr>
+<td>1.4</td>
+<td>Outputs</td>
+<td>ALB DNS, RDS endpoint, ECR URL, cluster/service names, secret ARN</td>
+</tr>
+<tr>
+<td>2.1</td>
+<td>Tests on PR</td>
+<td><code>ci.yml</code> triggered on <code>pull_request</code></td>
+</tr>
+<tr>
+<td>2.1</td>
+<td>Build &amp; push on merge</td>
+<td><code>cd.yml</code> triggered on <code>push</code> to <code>main</code>, pushes to ECR</td>
+</tr>
+<tr>
+<td>2.1</td>
+<td>Deploy to staging</td>
+<td><code>cd.yml</code> job with <code>environment: staging</code></td>
+</tr>
+<tr>
+<td>2.1</td>
+<td>Manual approval for prod</td>
+<td><code>cd.yml</code> job with <code>environment: production</code> + required reviewers</td>
+</tr>
+<tr>
+<td>2.2</td>
+<td>Unit + integration tests</td>
+<td>pytest (or jest) unit tests; integration tests against a Postgres service container</td>
+</tr>
+<tr>
+<td>2.2</td>
+<td>Vulnerability scanning</td>
+<td>Dependency scan + container image scan (Trivy) + IaC scan (Checkov) <strong>[Extra]</strong></td>
+</tr>
+<tr>
+<td>2.2</td>
+<td>Failure notifications</td>
+<td>Slack incoming webhook (and/or email) on any failed job</td>
+</tr>
+<tr>
+<td>3.1</td>
+<td>Infra metrics (CPU, memory, disk)</td>
+<td>ECS Container Insights (incl. ephemeral storage), RDS storage</td>
+</tr>
+<tr>
+<td>3.1</td>
+<td>App metrics (rate, errors, latency)</td>
+<td>ALB metrics: RequestCount, 5XX, TargetResponseTime p50/p95/p99</td>
+</tr>
+<tr>
+<td>3.1</td>
+<td>DB metrics</td>
+<td>RDS CloudWatch metrics + Performance Insights / Database Insights</td>
+</tr>
+<tr>
+<td>3.2</td>
+<td>Centralized logging (app, system, access)</td>
+<td>CloudWatch Logs for app; ALB access logs in S3; VPC Flow Logs, ECS events, RDS logs as system logs</td>
+</tr>
+<tr>
+<td>3.3</td>
+<td>≥ 2 dashboards</td>
+<td>&quot;Application Golden Signals&quot; + &quot;Infrastructure &amp; Database&quot; CloudWatch dashboards (as code)</td>
+</tr>
+<tr>
+<td>4.1</td>
+<td>README</td>
+<td>Setup, architecture, security, cost</td>
+</tr>
+<tr>
+<td>4.2</td>
+<td>Secret management + backup</td>
+<td>Secrets Manager (RDS-managed secret) + RDS automated backups/PITR (+ AWS Backup <strong>[Extra]</strong>)</td>
+</tr>
+<tr>
+<td>D</td>
+<td>Challenges doc, Loom video</td>
+<td>Section 11 &amp; 12 of this manual</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2>2. Architecture decision</h2>
+<h3>2.1 Recommended architecture (happy path)</h3>
+<pre><code>                         Internet
+                            │
+                     ┌──────▼──────┐
+                     │     ALB     │  public subnets (2 AZs)      ──► access logs → S3
+                     └──────┬──────┘
+                            │  SG: only ALB → app port
+              ┌─────────────▼─────────────┐
+              │  ECS Service (Fargate)    │  private-app subnets (2 AZs)
+              │  2 tasks, autoscaling     │  ──► stdout logs → CloudWatch Logs
+              └─────────────┬─────────────┘
+                            │  SG: only App → 5432
+                     ┌──────▼──────┐
+                     │ RDS Postgres│  private-db subnets (2 AZs)
+                     └─────────────┘  ──► postgres logs → CloudWatch Logs
+
+  Outbound from private subnets → NAT Gateway (public subnet) → Internet (ECR, Secrets Manager)
+
+  Supporting: ECR (images) · Secrets Manager (DB credentials) · S3 (TF state + logs)
+              CloudWatch (metrics, alarms, dashboards) · SNS (alerts) · IAM OIDC role (GitHub Actions)
+</code></pre>
+<p>Region: <strong><code>ap-south-1</code> (Mumbai)</strong>. Justification to write in the README: lowest latency for an India-based team and customers, and 8byte serves BFSI clients — Indian regulators (RBI) have data-localisation expectations for certain financial data, so defaulting to an Indian region is the right instinct. This one sentence shows you read their job description.</p>
+<h3>2.2 Why ECS Fargate (and how to defend it)</h3>
+<p>You must be able to defend this choice in R2/R3, especially because the JD emphasises Kubernetes. Your argument:</p>
+<table>
+<thead>
+<tr>
+<th>Option</th>
+<th>Pros</th>
+<th>Cons</th>
+<th>Verdict for this assignment</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>EC2 + Docker in an ASG</td>
+<td>Cheapest, full OS control, easy &quot;system logs&quot;</td>
+<td>You patch the OS, deployments are clunky (instance refresh / SSM), more toil</td>
+<td>Workable but dated</td>
+</tr>
+<tr>
+<td><strong>ECS on Fargate</strong></td>
+<td>No nodes to manage, native ALB/IAM/Secrets/CloudWatch integration, simple rolling deploys with auto-rollback, small Terraform surface</td>
+<td>AWS-specific, less control, no host-level logs</td>
+<td><strong>Chosen</strong> — best fit for 9–12 hours and a startup that is &quot;allergic to toil&quot;</td>
+</tr>
+<tr>
+<td>EKS</td>
+<td>Industry standard, portable, rich ecosystem (Helm, Prometheus operator)</td>
+<td>Control plane cost (~$0.10/hr), node groups, add-ons, IRSA/Pod Identity, ingress controller — easily doubles the effort</td>
+<td>Mention as the &quot;next step&quot; in README</td>
+</tr>
+</tbody>
+</table>
+<p>Phrase it in the README like: <em>&quot;For a single stateless service, ECS Fargate gives production-grade rolling deploys and autoscaling with the smallest operational surface. As the number of services grows, or if portability/Helm-based workflows are needed, I would migrate to EKS; the container image, CI pipeline and RDS/VPC layers would be reused unchanged.&quot;</em></p>
+<p><strong>If you are already strong in Kubernetes</strong> and want to go EKS, that's legitimate and will impress for this JD — but only if you're confident you can finish everything else in time. Everything in this manual except Section 7.6–7.8 and the deploy step transfers directly. Don't switch mid-way.</p>
+<h3>2.3 Environments</h3>
+<p>Two environments, <strong>staging</strong> and <strong>production</strong>, each a separate Terraform root with its <strong>own state file</strong>. They share one ECR repository and one GitHub OIDC role set (in a <code>shared</code> root), because the core CI/CD principle is <em>build once, promote the same image</em>.</p>
+<p>Why separate roots instead of <code>terraform workspace</code>: explicit per-env configuration (prod has Multi-AZ, deletion protection, longer backups), smaller blast radius, no risk of applying to the wrong workspace. Write this in your decisions file.</p>
+<p>Cost-control note: to save money, production can use the same small sizes as staging during the assignment; the <em>differences</em> (Multi-AZ, deletion protection, retention) are expressed in <code>prod.tfvars</code> and explained. You can even keep prod destroyed except while recording the video.</p>
+<hr>
+<h2>3. Prerequisites and one-time setup</h2>
+<h3>3.1 Accounts</h3>
+<ul>
+<li><strong>AWS account.</strong> Secure it first: MFA on root, never use root again. Create an admin identity for yourself (IAM Identity Center user, or at minimum an IAM user with MFA). Configure the AWS CLI with a named profile.</li>
+<li><strong>Billing guardrail.</strong> Before creating anything, create an AWS Budget with an email alert (e.g. $15/month). Check what free-tier/credits your account has — AWS changed the free tier model for new accounts in 2025, so look at the Billing console rather than assuming.</li>
+<li><strong>GitHub account</strong> and a <strong>public</strong> repository. Public matters: <em>environment protection rules with required reviewers</em> (your manual approval) are available on public repos on the free plan; on private repos they need a paid plan. They asked you to share the repo anyway.</li>
+<li><strong>Slack workspace</strong> (free) with an <strong>Incoming Webhook</strong> app installed on a channel such as <code>#deployments</code>. Store the URL only as a GitHub secret.</li>
+</ul>
+<h3>3.2 Tools (install and verify versions)</h3>
+<table>
+<thead>
+<tr>
+<th>Tool</th>
+<th>Version guidance</th>
+<th>Verify</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Terraform</td>
+<td>≥ 1.10 (1.11+ recommended — needed for S3 native locking without DynamoDB)</td>
+<td><code>terraform version</code></td>
+</tr>
+<tr>
+<td>AWS CLI</td>
+<td>v2</td>
+<td><code>aws sts get-caller-identity --profile &lt;p&gt;</code></td>
+</tr>
+<tr>
+<td>Docker</td>
+<td>Desktop or Engine with buildx</td>
+<td><code>docker buildx version</code></td>
+</tr>
+<tr>
+<td>Git</td>
+<td>any recent</td>
+<td></td>
+</tr>
+<tr>
+<td>Python 3.12 (or Node 20/22 if you choose a JS app)</td>
+<td>match your app</td>
+<td></td>
+</tr>
+<tr>
+<td>tflint, checkov, hadolint, trivy <strong>[Extra, local]</strong></td>
+<td>latest</td>
+<td>run each with <code>--version</code></td>
+</tr>
+<tr>
+<td>pre-commit <strong>[Extra]</strong></td>
+<td>latest</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p>Apple Silicon users: Fargate defaults to <code>X86_64</code>. Either build images with <code>--platform linux/amd64</code> or set the task definition <code>runtime_platform</code> to <code>ARM64</code> and build ARM images. Pick one and stay consistent (ARM64/Graviton is ~20% cheaper on Fargate — a nice cost note).</p>
+<hr>
+<h2>4. Repository layout</h2>
+<p>Create this skeleton on day one and commit it.</p>
+<pre><code>8byte-devops-assignment/
+├── app/                         # the application (any ready-made or tiny self-written app)
+│   ├── src/ ...
+│   ├── tests/
+│   │   ├── unit/
+│   │   └── integration/
+│   ├── requirements.txt (or package.json + lockfile)
+│   ├── Dockerfile
+│   └── .dockerignore
+├── docker-compose.yml           # local dev: app + postgres
+├── infra/
+│   ├── bootstrap/               # creates the S3 state bucket (local state, run once)
+│   ├── modules/
+│   │   ├── network/
+│   │   ├── security/            # security groups (or put SGs inside each module)
+│   │   ├── alb/
+│   │   ├── ecs/
+│   │   ├── rds/
+│   │   ├── monitoring/          # alarms, dashboards, SNS, query definitions
+│   │   └── backup/              # [Extra] AWS Backup plan
+│   └── envs/
+│       ├── shared/              # ECR repo + GitHub OIDC provider + deploy roles
+│       ├── staging/
+│       └── production/
+├── monitoring/
+│   └── grafana/                 # [Extra] local Grafana w/ CloudWatch datasource + dashboard JSON
+├── scripts/
+│   ├── smoke-test.sh            # curl /health with retries — used by the pipeline
+│   └── ...                      # any helper scripts (bash/python)
+├── .github/
+│   ├── workflows/
+│   │   ├── ci.yml
+│   │   └── cd.yml
+│   └── pull_request_template.md # [Extra]
+├── docs/
+│   ├── architecture.png         # draw with draw.io / excalidraw
+│   └── runbook.md               # [Extra] how to roll back, restore DB, rotate secret
+├── .pre-commit-config.yaml      # [Extra]
+├── .gitignore                   # .terraform/, *.tfstate*, *.tfvars containing secrets, .env
+├── Makefile                     # [Extra] make test, make up, make plan ENV=staging
+└── README.md
+</code></pre>
+<p>Each Terraform module folder contains exactly: <code>main.tf</code>, <code>variables.tf</code>, <code>outputs.tf</code>, and optionally <code>versions.tf</code> and a short <code>README.md</code>. Each env folder contains: <code>backend.tf</code>, <code>providers.tf</code>, <code>versions.tf</code>, <code>main.tf</code> (calls modules), <code>variables.tf</code>, <code>outputs.tf</code>, <code>terraform.tfvars</code> (non-secret values only).</p>
+<hr>
+<h2>5. Phase 0 — The application</h2>
+<h3>5.1 Requirements for the app (logic doesn't matter, these properties do)</h3>
+<p>Whatever you pick, it must have:</p>
+<ol>
+<li>An HTTP server listening on a configurable port (env var <code>PORT</code>).</li>
+<li><strong><code>GET /health</code></strong> — liveness, returns 200 without touching the DB. The ALB uses this.</li>
+<li><strong><code>GET /ready</code></strong> <strong>[Extra]</strong> — checks DB connectivity; useful for smoke tests.</li>
+<li>At least one endpoint that reads/writes Postgres (e.g. <code>/api/items</code> list + create). This proves the RDS + secret wiring works in the demo.</li>
+<li>Database config read <strong>only from environment variables</strong>: <code>DB_HOST</code>, <code>DB_PORT</code>, <code>DB_NAME</code>, <code>DB_USER</code>, <code>DB_PASSWORD</code>. Never hard-code.</li>
+<li>Logs to <strong>stdout</strong> in <strong>JSON</strong>, one line per event, including request method, path, status, duration_ms. Structured logs make CloudWatch Logs Insights queries trivial.</li>
+<li>A simple frontend (a single HTML page served at <code>/</code> that calls the API is enough — &quot;load balancer for the frontend&quot;).</li>
+<li><strong>Unit tests</strong> that run without a database (mock the DB layer) and <strong>integration tests</strong> that hit a real Postgres.</li>
+</ol>
+<h3>5.2 Choosing the app</h3>
+<p>Two good routes:</p>
+<ul>
+<li><strong>Write a tiny app yourself (recommended).</strong> ~100–150 lines with <strong>FastAPI + psycopg</strong> or <strong>Flask + SQLAlchemy</strong> (or <strong>Express + pg</strong> in Node). It takes ~1 hour, you understand every line, and you can explain it live. Create the table on startup if it doesn't exist (happy path); mention proper migrations (Alembic / a one-off ECS migration task) as <strong>[Extra]</strong>.</li>
+<li><strong>Use a ready-made project</strong> (allowed by the PDF). E.g. a well-known FastAPI/Postgres template or a Node todo app with Postgres. Credit it in the README. Downside: bigger codebases often have heavier builds, more CVEs in scans, and multi-container setups that complicate the ECS task.</li>
+</ul>
+<p><strong>Docs to read:</strong> FastAPI tutorial (<code>fastapi.tiangolo.com</code> → <em>Tutorial – User Guide</em>, <em>Testing</em>), psycopg 3 docs (<em>Basic module usage</em>), pytest docs (<em>Get started</em>, <em>markers</em>, <em>fixtures</em>). For Node: Express <em>Getting started</em>, <code>node-postgres</code> docs, Jest docs.</p>
+<h3>5.3 Tests</h3>
+<ul>
+<li>Mark tests so CI can run them separately: e.g. pytest markers <code>unit</code> and <code>integration</code> registered in <code>pytest.ini</code>/<code>pyproject.toml</code>.</li>
+<li>Unit tests: use the framework's test client (FastAPI <code>TestClient</code>) and override/mock the DB dependency.</li>
+<li>Integration tests: read DB connection details from env vars; in CI these point to a Postgres <strong>service container</strong>. Test: create item → list items → item present.</li>
+<li>Add coverage reporting (<code>pytest-cov</code>) <strong>[Extra]</strong>.</li>
+</ul>
+<h3>5.4 Dockerfile — what &quot;good&quot; looks like</h3>
+<p>Write it yourself following these rules (each is a talking point):</p>
+<ol>
+<li><strong>Multi-stage build</strong>: a builder stage that installs dependencies, a slim runtime stage that copies only what's needed.</li>
+<li><strong>Pinned, slim base image</strong> (e.g. <code>python:3.12-slim</code> with a specific tag; pinning by digest is <strong>[Extra]</strong>). Avoid <code>latest</code>.</li>
+<li><strong>Dependency layer caching</strong>: copy the requirements/lock file and install <em>before</em> copying source.</li>
+<li><strong>Non-root user</strong>: create a user and switch with <code>USER</code>. Combine later with ECS <code>readonlyRootFilesystem</code> <strong>[Extra]</strong>.</li>
+<li><strong>No secrets in the image</strong>, <code>.dockerignore</code> excludes <code>.git</code>, tests (optional), <code>.env</code>, <code>__pycache__</code>, <code>node_modules</code>.</li>
+<li><code>EXPOSE</code> the port, run with a production server (uvicorn/gunicorn), exec-form <code>CMD</code>.</li>
+<li><code>HEALTHCHECK</code> is optional — ECS/ALB health checks are what matter on Fargate.</li>
+</ol>
+<p><strong>Docs:</strong> Docker docs → <em>Building best practices</em>, <em>Multi-stage builds</em>, <em>Dockerfile reference</em>. Run <strong>hadolint</strong> on it and fix warnings.</p>
+<h3>5.5 Local run</h3>
+<p><code>docker-compose.yml</code> with two services: <code>db</code> (official <code>postgres:16</code> image, env vars, a healthcheck using <code>pg_isready</code>, a named volume) and <code>app</code> (build from <code>./app</code>, <code>depends_on</code> with <code>condition: service_healthy</code>, env vars pointing to <code>db</code>). <strong>Docs:</strong> Docker Compose file reference → <code>depends_on</code>, <code>healthcheck</code>.</p>
+<p><strong>Done when:</strong> <code>docker compose up</code> works, <code>/health</code> returns 200, you can create and list items, unit and integration tests pass locally, hadolint is clean, first commit pushed.</p>
+<hr>
+<h2>6. Phase 1 — Terraform foundations</h2>
+<h3>6.1 Conventions to apply everywhere</h3>
+<ul>
+<li><strong><code>versions.tf</code></strong>: <code>required_version</code> (e.g. <code>&gt;= 1.10</code>) and <code>required_providers</code> pinning <code>hashicorp/aws</code> to the major you install (currently 6.x: <code>~&gt; 6.0</code>). Many blog posts show v5 syntax — when an argument errors out, check the provider's <em>Version 6 Upgrade Guide</em>. Commit <code>.terraform.lock.hcl</code>.</li>
+<li><strong>Provider <code>default_tags</code></strong>: <code>Project</code>, <code>Environment</code>, <code>ManagedBy = &quot;terraform&quot;</code>, <code>Owner</code>. Every resource gets tagged for free — essential for cost allocation.</li>
+<li><strong>Naming</strong>: a <code>locals { name_prefix = &quot;${var.project}-${var.environment}&quot; }</code> used in every name.</li>
+<li><strong>Variables</strong>: every variable has <code>description</code> and <code>type</code>; add <code>validation</code> blocks where it makes sense (e.g. environment must be <code>staging</code> or <code>production</code>, CIDR must be valid via <code>can(cidrhost(...))</code>). Mark secret-ish values <code>sensitive = true</code>.</li>
+<li><strong>No hard-coded AZs</strong>: use <code>data &quot;aws_availability_zones&quot;</code> and <code>slice()</code>.</li>
+<li><strong>Subnet maths</strong>: use <code>cidrsubnet()</code> rather than typing CIDRs.</li>
+<li><strong>Iteration</strong>: prefer <code>for_each</code> (stable keys) over <code>count</code> for subnets/rules.</li>
+<li>Run <code>terraform fmt -recursive</code> and <code>terraform validate</code> before every commit.</li>
+</ul>
+<p><strong>Docs:</strong> Terraform Language docs (<code>developer.hashicorp.com/terraform/language</code>) → <em>Variables</em>, <em>Outputs</em>, <em>Locals</em>, <em>Modules</em>, <em>for_each</em>, <em>Functions → cidrsubnet, slice, jsonencode</em>, <em>Backend → s3</em>. AWS provider docs on the Terraform Registry (<code>registry.terraform.io/providers/hashicorp/aws/latest/docs</code>) — <strong>this is the single document you'll use most</strong>; every resource below has a page with arguments, attributes and examples.</p>
+<h3>6.2 State management (<code>infra/bootstrap</code>)</h3>
+<p>The chicken-and-egg problem: the bucket that stores state can't store its own state. Solve it with a tiny <code>bootstrap</code> root that uses <strong>local state</strong> and is run once.</p>
+<p>Resources:</p>
+<ul>
+<li><code>aws_s3_bucket</code> — globally unique name, e.g. <code>&lt;project&gt;-tfstate-&lt;account-id&gt;</code>. Add <code>lifecycle { prevent_destroy = true }</code>.</li>
+<li><code>aws_s3_bucket_versioning</code> — <code>Enabled</code> (lets you recover a corrupted/overwritten state).</li>
+<li><code>aws_s3_bucket_server_side_encryption_configuration</code> — SSE-S3 or SSE-KMS.</li>
+<li><code>aws_s3_bucket_public_access_block</code> — all four settings <code>true</code>.</li>
+<li><strong>[Extra]</strong> bucket policy denying non-TLS requests (<code>aws:SecureTransport = false</code>).</li>
+</ul>
+<p>Locking: Terraform 1.10 introduced <strong>S3 native state locking</strong> (<code>use_lockfile = true</code> in the backend); since 1.11 it is the recommended approach and the old DynamoDB lock table (<code>dynamodb_table</code>) is deprecated. Use <code>use_lockfile</code>. If an interviewer asks, explain what locking prevents (two concurrent applies corrupting state) and that older setups used DynamoDB.</p>
+<p>In each env root, <code>backend.tf</code> has an <code>s3</code> backend block with <code>bucket</code>, <code>key</code> (e.g. <code>staging/terraform.tfstate</code>, <code>production/terraform.tfstate</code>, <code>shared/terraform.tfstate</code>), <code>region</code>, <code>encrypt = true</code>, <code>use_lockfile = true</code>. Backend blocks can't use variables — that's expected; mention partial backend configuration (<code>-backend-config</code>) as an alternative.</p>
+<p><strong>Docs:</strong> Terraform → <em>Backend Type: s3</em> page (read the locking section carefully); <em>State: Locking</em>.</p>
+<p><strong>Done when:</strong> <code>terraform apply</code> in bootstrap creates the bucket; <code>terraform init</code> in an env root successfully uses the S3 backend; you can see the state object in S3 after a first apply.</p>
+<h3>6.3 <code>modules/network</code></h3>
+<p><strong>Resources:</strong></p>
+<ul>
+<li><code>data &quot;aws_availability_zones&quot;</code> (state = available).</li>
+<li><code>aws_vpc</code> — <code>cidr_block</code> (e.g. <code>10.10.0.0/16</code> staging, <code>10.20.0.0/16</code> prod — non-overlapping so you <em>could</em> peer later), <code>enable_dns_support = true</code>, <code>enable_dns_hostnames = true</code> (needed for RDS endpoint resolution and VPC endpoints).</li>
+<li><code>aws_subnet</code> × 3 tiers × 2 AZs via <code>for_each</code>:
+<ul>
+<li>public (<code>map_public_ip_on_launch = true</code>) — ALB + NAT only,</li>
+<li>private-app — ECS tasks,</li>
+<li>private-db — RDS (separate tier means the DB route table/NACLs can be stricter, and it's the pattern reviewers expect).</li>
+</ul>
+</li>
+<li><code>aws_internet_gateway</code>.</li>
+<li><code>aws_eip</code> with <code>domain = &quot;vpc&quot;</code> (the old <code>vpc = true</code> argument no longer exists — a common error from old tutorials).</li>
+<li><code>aws_nat_gateway</code> in a public subnet. Variable <code>single_nat_gateway</code> (bool): <code>true</code> for staging (cost), <code>false</code> for prod (one NAT per AZ for AZ-failure resilience). This variable is a great README talking point.</li>
+<li><code>aws_route_table</code> + <code>aws_route</code> + <code>aws_route_table_association</code>: public → IGW; private → NAT (per AZ if multiple NATs); db tier can have <strong>no</strong> internet route at all.</li>
+<li><strong>VPC Flow Logs</strong> (counts as &quot;system/network logs&quot;): <code>aws_flow_log</code> → <code>aws_cloudwatch_log_group</code> (retention 7–14 days) with an <code>aws_iam_role</code> trusted by <code>vpc-flow-logs.amazonaws.com</code>.</li>
+</ul>
+<p><strong>Variables:</strong> <code>project</code>, <code>environment</code>, <code>vpc_cidr</code>, <code>az_count</code> (default 2), <code>single_nat_gateway</code>, <code>flow_log_retention_days</code>.
+<strong>Outputs:</strong> <code>vpc_id</code>, <code>public_subnet_ids</code>, <code>private_app_subnet_ids</code>, <code>private_db_subnet_ids</code>, <code>vpc_cidr</code>.</p>
+<p><strong>[Extra]</strong> VPC endpoints (<code>aws_vpc_endpoint</code>): an S3 <strong>gateway</strong> endpoint is free and reduces NAT data charges for ECR image layers (stored in S3). Interface endpoints for ECR/Logs/Secrets Manager remove the need for NAT entirely but cost per hour per AZ — mention the trade-off rather than necessarily building it.</p>
+<p><strong>Docs:</strong> AWS VPC User Guide → <em>VPC with public and private subnets</em>, <em>NAT gateways</em>, <em>Flow logs</em>. Registry pages for each resource above.</p>
+<p><strong>Done when:</strong> in the VPC console you can see the subnets, route tables pointing correctly, and a NAT gateway in &quot;Available&quot;.</p>
+<h3>6.4 Security groups</h3>
+<p>Use the modern per-rule resources <code>aws_vpc_security_group_ingress_rule</code> / <code>aws_vpc_security_group_egress_rule</code> attached to <code>aws_security_group</code> (the registry recommends these over inline <code>ingress {}</code> blocks — mention why: avoids rule conflicts and gives each rule its own ID/tags).</p>
+<table>
+<thead>
+<tr>
+<th>SG</th>
+<th>Ingress</th>
+<th>Egress</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>alb-sg</code></td>
+<td>80 (and 443 if HTTPS) from <code>0.0.0.0/0</code></td>
+<td>app port to <code>app-sg</code> only</td>
+</tr>
+<tr>
+<td><code>app-sg</code></td>
+<td>app port <strong>from <code>alb-sg</code> only</strong> (<code>referenced_security_group_id</code>)</td>
+<td>443 to <code>0.0.0.0/0</code> (ECR, Secrets Manager, CloudWatch via NAT) and 5432 to <code>db-sg</code></td>
+</tr>
+<tr>
+<td><code>db-sg</code></td>
+<td>5432 <strong>from <code>app-sg</code> only</strong></td>
+<td>none needed</td>
+</tr>
+</tbody>
+</table>
+<p>Key talking point: rules reference <strong>security groups, not CIDRs</strong> — so it stays correct as tasks scale and IPs change. Nothing can reach the DB except the app; nothing can reach the app except the ALB.</p>
+<p><strong>Docs:</strong> AWS VPC → <em>Security group rules</em>; registry pages for the two rule resources.</p>
+<h3>6.5 <code>envs/shared</code> — ECR and GitHub OIDC</h3>
+<p><strong>ECR:</strong></p>
+<ul>
+<li><code>aws_ecr_repository</code>: <code>image_tag_mutability = &quot;IMMUTABLE&quot;</code> (a tag like a git SHA can never be overwritten — auditability and safe rollbacks), <code>image_scanning_configuration { scan_on_push = true }</code>, encryption configuration, <code>force_delete = true</code> only because this is a demo (say so).</li>
+<li><code>aws_ecr_lifecycle_policy</code>: expire untagged images after N days, keep last N (e.g. 20) tagged images — cost control.</li>
+</ul>
+<p><strong>GitHub OIDC (no long-lived AWS keys in GitHub — a major security point):</strong></p>
+<ul>
+<li><code>aws_iam_openid_connect_provider</code> with <code>url = &quot;https://token.actions.githubusercontent.com&quot;</code> and <code>client_id_list = [&quot;sts.amazonaws.com&quot;]</code>. (Thumbprints are no longer required to be accurate for GitHub's provider in current AWS/provider versions; check the registry page for your provider version.)</li>
+<li>Two roles: <code>github-deploy-staging</code> and <code>github-deploy-production</code> (or one role with a broader <code>sub</code> for the assignment, noting the improvement). Build the trust policy with <code>data &quot;aws_iam_policy_document&quot;</code>:
+<ul>
+<li>action <code>sts:AssumeRoleWithWebIdentity</code>, principal = the OIDC provider ARN,</li>
+<li>condition <code>StringEquals</code> on <code>token.actions.githubusercontent.com:aud</code> = <code>sts.amazonaws.com</code>,</li>
+<li>condition <code>StringLike</code> on <code>token.actions.githubusercontent.com:sub</code> = <code>repo:&lt;owner&gt;/&lt;repo&gt;:environment:staging</code> (and <code>:environment:production</code> for the prod role). <strong>Restricting by environment means only a job that passed the production approval gate can assume the production role</strong> — excellent interview point.</li>
+</ul>
+</li>
+<li>Permissions policy (least privilege): ECR push actions (<code>ecr:GetAuthorizationToken</code> on <code>*</code>, and on the repo ARN: <code>BatchCheckLayerAvailability</code>, <code>InitiateLayerUpload</code>, <code>UploadLayerPart</code>, <code>CompleteLayerUpload</code>, <code>PutImage</code>, <code>BatchGetImage</code>), ECS deploy actions (<code>ecs:DescribeTaskDefinition</code>, <code>ecs:RegisterTaskDefinition</code>, <code>ecs:UpdateService</code>, <code>ecs:DescribeServices</code>), and <code>iam:PassRole</code> limited to the task and execution roles of that environment.</li>
+</ul>
+<p>Note: the ECS task/execution roles live in the env roots, so either create the deploy roles in the env roots, or pass role ARNs in. Simplest clean approach: OIDC provider + ECR in <code>shared</code>; each env root creates its own deploy role referencing the provider ARN (look it up with <code>data &quot;aws_iam_openid_connect_provider&quot;</code>). Decide and document.</p>
+<p><strong>Outputs:</strong> <code>ecr_repository_url</code>, <code>github_oidc_provider_arn</code> (and deploy role ARNs if created here).</p>
+<p><strong>Docs:</strong> GitHub Docs → <em>Security hardening with OpenID Connect</em> → <em>Configuring OpenID Connect in Amazon Web Services</em>; README of <code>aws-actions/configure-aws-credentials</code> (has a sample trust policy); AWS ECR User Guide → <em>Lifecycle policies</em>, <em>Image tag mutability</em>.</p>
+<p><strong>Bootstrap gotcha — the first image:</strong> the ECS service needs an image to exist. After applying <code>shared</code>, build and push one image manually (<code>aws ecr get-login-password | docker login ...</code>, <code>docker build</code>, <code>docker tag</code>, <code>docker push</code>) and pass that URI to the env as a variable for the very first apply. Write this in the README setup steps and in your challenges log.</p>
+<h3>6.6 <code>modules/alb</code></h3>
+<ul>
+<li><strong>S3 bucket for access logs</strong> (<code>aws_s3_bucket</code> + public access block + encryption <strong>SSE-S3</strong> — ALB access logs don't support SSE-KMS customer keys, a classic gotcha — + lifecycle expiration e.g. 30 days + <code>aws_s3_bucket_policy</code> that allows Elastic Load Balancing to write). The exact principal differs by region (older regions like ap-south-1 use a regional ELB account ID); copy it from the AWS doc page <em>Enable access logs for your Application Load Balancer</em>. If the policy is wrong, <code>terraform apply</code> of the ALB fails with an &quot;Access Denied for bucket&quot; error — expect it, log it.</li>
+<li><code>aws_lb</code>: <code>load_balancer_type = &quot;application&quot;</code>, <code>internal = false</code>, public subnets, <code>alb-sg</code>, <code>drop_invalid_header_fields = true</code> (security), <code>access_logs { bucket, enabled = true, prefix }</code>, <code>enable_deletion_protection</code> = variable (true in prod).</li>
+<li><code>aws_lb_target_group</code>: <strong><code>target_type = &quot;ip&quot;</code></strong> (mandatory for Fargate/awsvpc — the default <code>instance</code> will fail), port = app port, <code>protocol = &quot;HTTP&quot;</code>, <code>vpc_id</code>, <code>health_check { path = &quot;/health&quot;, matcher = &quot;200&quot;, interval, healthy_threshold, unhealthy_threshold }</code>, <code>deregistration_delay = 30</code> (faster deploys than the 300s default — explain why).</li>
+<li><code>aws_lb_listener</code> on 80: <code>default_action</code> forward to target group.</li>
+<li><strong>[Extra] HTTPS:</strong> only if you own a domain — <code>aws_acm_certificate</code> (DNS validation) + <code>aws_route53_record</code> + <code>aws_acm_certificate_validation</code>, a 443 listener with a modern <code>ssl_policy</code>, and the 80 listener changed to a redirect to 443. If you don't have a domain, state clearly in the README: &quot;Production would terminate TLS at the ALB with ACM; omitted because no domain was available for the demo.&quot; That's an acceptable, honest trade-off.</li>
+<li><strong>[Extra]</strong> <code>aws_wafv2_web_acl</code> with AWS managed rule groups associated to the ALB.</li>
+</ul>
+<p><strong>Outputs:</strong> <code>alb_dns_name</code>, <code>alb_arn_suffix</code>, <code>target_group_arn</code>, <code>target_group_arn_suffix</code> (the <code>arn_suffix</code> values are what CloudWatch metric dimensions need — you'll use them in dashboards).</p>
+<p><strong>Docs:</strong> ELB User Guide for ALBs → <em>Target groups → Health checks</em>, <em>Access logs</em>; registry <code>aws_lb</code>, <code>aws_lb_target_group</code>, <code>aws_lb_listener</code>.</p>
+<h3>6.7 <code>modules/rds</code></h3>
+<ul>
+<li><code>aws_db_subnet_group</code> with the two private-db subnets (RDS requires subnets in at least two AZs even for single-AZ instances).</li>
+<li><code>aws_db_parameter_group</code> (family must match the major version, e.g. <code>postgres16</code>): <code>log_min_duration_statement</code> (e.g. 500 ms — log slow queries), <code>log_connections</code>/<code>log_disconnections</code> <strong>[Extra]</strong>, ensure <code>rds.force_ssl = 1</code> (encryption in transit).</li>
+<li><code>aws_db_instance</code> — the arguments that matter and why:</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>Argument</th>
+<th>Value</th>
+<th>Why</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>engine</code> / <code>engine_version</code></td>
+<td><code>postgres</code> / a supported 16.x or 17.x</td>
+<td>Check <code>aws rds describe-db-engine-versions --engine postgres</code></td>
+</tr>
+<tr>
+<td><code>instance_class</code></td>
+<td><code>db.t4g.micro</code></td>
+<td>Graviton, cheapest</td>
+</tr>
+<tr>
+<td><code>allocated_storage</code> / <code>max_allocated_storage</code></td>
+<td>20 / 50</td>
+<td>Storage autoscaling prevents disk-full outages</td>
+</tr>
+<tr>
+<td><code>storage_type</code></td>
+<td><code>gp3</code></td>
+<td>Cheaper baseline IOPS than gp2</td>
+</tr>
+<tr>
+<td><code>storage_encrypted</code></td>
+<td><code>true</code></td>
+<td>Encryption at rest</td>
+</tr>
+<tr>
+<td><code>manage_master_user_password</code></td>
+<td><code>true</code></td>
+<td><strong>RDS generates and stores the password in Secrets Manager</strong> — your secret-management deliverable; no password ever appears in Terraform code or state</td>
+</tr>
+<tr>
+<td><code>publicly_accessible</code></td>
+<td><code>false</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>multi_az</code></td>
+<td>var: false staging / true prod</td>
+<td>HA vs cost</td>
+</tr>
+<tr>
+<td><code>backup_retention_period</code></td>
+<td>var: 1–3 staging / 7–14 prod</td>
+<td>PITR window — your backup deliverable</td>
+</tr>
+<tr>
+<td><code>backup_window</code>, <code>maintenance_window</code></td>
+<td>non-overlapping, off-peak IST</td>
+<td></td>
+</tr>
+<tr>
+<td><code>deletion_protection</code></td>
+<td>var: true in prod</td>
+<td></td>
+</tr>
+<tr>
+<td><code>skip_final_snapshot</code> / <code>final_snapshot_identifier</code></td>
+<td>var</td>
+<td>Prod takes a final snapshot on destroy</td>
+</tr>
+<tr>
+<td><code>copy_tags_to_snapshot</code></td>
+<td><code>true</code></td>
+<td>Cost attribution</td>
+</tr>
+<tr>
+<td><code>enabled_cloudwatch_logs_exports</code></td>
+<td><code>[&quot;postgresql&quot;, &quot;upgrade&quot;]</code></td>
+<td>Centralised DB logs</td>
+</tr>
+<tr>
+<td><code>performance_insights_enabled</code></td>
+<td><code>true</code> (free retention tier)</td>
+<td>DB metrics — AWS is folding this into <strong>CloudWatch Database Insights</strong>; check the current console naming</td>
+</tr>
+<tr>
+<td><code>monitoring_interval</code> + <code>monitoring_role_arn</code></td>
+<td><strong>[Extra]</strong> 60</td>
+<td>Enhanced Monitoring = OS-level DB metrics</td>
+</tr>
+<tr>
+<td><code>auto_minor_version_upgrade</code></td>
+<td><code>true</code></td>
+<td>Security patches</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Outputs:</strong> <code>db_endpoint</code>, <code>db_address</code>, <code>db_port</code>, <code>db_name</code>, <code>db_instance_identifier</code>, and <code>master_user_secret[0].secret_arn</code> (the ARN of the generated secret — the ECS module needs it).</p>
+<p><strong>Important rotation gotcha (great interview point):</strong> an RDS-managed secret is rotated automatically (default every 7 days). ECS injects secrets <strong>only at task start</strong>, so running tasks keep the old password and will fail on new connections after rotation. Mitigations to document: trigger a new ECS deployment on rotation (EventBridge rule on the Secrets Manager rotation event), or have the app fetch the secret at connect time with caching, or rely on connection retry + task restart. You don't have to build it — just show you know.</p>
+<p><strong>Docs:</strong> RDS User Guide → <em>Password management with Amazon RDS and AWS Secrets Manager</em>, <em>Backing up and restoring</em>, <em>Working with parameter groups</em>, <em>Publishing PostgreSQL logs to CloudWatch Logs</em>; registry <code>aws_db_instance</code> (read the <code>master_user_secret</code> attribute section).</p>
+<p><strong>Done when:</strong> RDS shows &quot;Available&quot;; the secret appears in Secrets Manager; the instance has no public endpoint.</p>
+<h3>6.8 <code>modules/ecs</code></h3>
+<ul>
+<li><code>aws_ecs_cluster</code> with <code>setting { name = &quot;containerInsights&quot;, value = &quot;enabled&quot; }</code> (or <code>&quot;enhanced&quot;</code> — the newer enhanced observability tier with more granular metrics; check pricing). Container Insights is what gives you CPU/memory/<strong>storage</strong>/network metrics per service and task.</li>
+<li><code>aws_ecs_cluster_capacity_providers</code> with <code>FARGATE</code> and <code>FARGATE_SPOT</code>. Staging can run 100% Spot (cost); prod uses on-demand base + optional Spot. Great cost talking point.</li>
+<li><code>aws_cloudwatch_log_group</code> <code>/ecs/&lt;name_prefix&gt;</code> with <code>retention_in_days</code> (never leave infinite retention — a hidden cost).</li>
+<li><strong>Two IAM roles — know the difference cold, it's asked constantly:</strong>
+<ul>
+<li><strong>Execution role</strong> (used by the ECS agent <em>before/around</em> your container): pulls the image from ECR, writes logs, <strong>reads the secret</strong>. Attach the AWS managed policy <code>AmazonECSTaskExecutionRolePolicy</code> plus an inline policy allowing <code>secretsmanager:GetSecretValue</code> on the RDS secret ARN only (and <code>kms:Decrypt</code> if the secret uses a customer-managed key).</li>
+<li><strong>Task role</strong> (used by <em>your application code</em> at runtime): grant only what the app calls — likely nothing for this app. Leave it minimal and say so.</li>
+<li>Both trusted by <code>ecs-tasks.amazonaws.com</code>.</li>
+</ul>
+</li>
+<li><code>aws_ecs_task_definition</code>: <code>family</code>, <code>network_mode = &quot;awsvpc&quot;</code>, <code>requires_compatibilities = [&quot;FARGATE&quot;]</code>, <code>cpu = 256</code>, <code>memory = 512</code>, <code>runtime_platform</code> (OS + CPU architecture), <code>execution_role_arn</code>, <code>task_role_arn</code>, and <code>container_definitions = jsonencode([...])</code> with:
+<ul>
+<li><code>name</code>, <code>image</code> (variable), <code>essential = true</code>, <code>portMappings</code> (containerPort = app port),</li>
+<li><code>environment</code>: <code>DB_HOST</code>, <code>DB_PORT</code>, <code>DB_NAME</code>, <code>PORT</code>, <code>ENVIRONMENT</code>,</li>
+<li><code>secrets</code>: <code>DB_USER</code> and <code>DB_PASSWORD</code> with <code>valueFrom</code> set to the secret ARN plus a JSON-key suffix (the format <code>&lt;secret-arn&gt;:&lt;json-key&gt;::</code> — the RDS-managed secret JSON has <code>username</code> and <code>password</code> keys). Read the AWS doc for the exact syntax; getting it wrong produces a <code>ResourceInitializationError</code> at task start.</li>
+<li><code>logConfiguration</code> with <code>logDriver = &quot;awslogs&quot;</code> and options <code>awslogs-group</code>, <code>awslogs-region</code>, <code>awslogs-stream-prefix</code>,</li>
+<li><strong>[Extra]</strong> <code>readonlyRootFilesystem = true</code> (add a writable tmp volume if your server needs one), <code>user</code> non-root, <code>linuxParameters { initProcessEnabled = true }</code>.</li>
+</ul>
+</li>
+<li><code>aws_ecs_service</code>:
+<ul>
+<li><code>cluster</code>, <code>task_definition</code>, <code>desired_count = 2</code> (one per AZ),</li>
+<li><code>capacity_provider_strategy</code> (or <code>launch_type = &quot;FARGATE&quot;</code>),</li>
+<li><code>network_configuration { subnets = private-app, security_groups = [app-sg], assign_public_ip = false }</code>,</li>
+<li><code>load_balancer { target_group_arn, container_name, container_port }</code>,</li>
+<li><code>health_check_grace_period_seconds</code> (e.g. 60, gives the app time to boot),</li>
+<li><code>deployment_minimum_healthy_percent = 100</code>, <code>deployment_maximum_percent = 200</code> (zero-downtime rolling deploys),</li>
+<li><code>deployment_circuit_breaker { enable = true, rollback = true }</code> — <strong>automatic rollback</strong> if new tasks fail health checks. Big differentiator; demo it in the video if time permits by deploying a deliberately broken image.</li>
+<li><code>lifecycle { ignore_changes = [task_definition, desired_count] }</code> — <strong>critical</strong>: after this, the CI/CD pipeline owns which task definition revision runs, and autoscaling owns the count. Without this, every <code>terraform apply</code> would roll the service back to the Terraform-known image. Explain this division of ownership in the README.</li>
+<li><code>depends_on</code> the ALB listener (the target group must be attached to a listener before the service registers).</li>
+<li><strong>[Extra]</strong> <code>enable_execute_command = true</code> (ECS Exec for debugging, requires SSM permissions on the task role) — note security implications.</li>
+</ul>
+</li>
+<li>Autoscaling: <code>aws_appautoscaling_target</code> (service namespace <code>ecs</code>, scalable dimension <code>ecs:service:DesiredCount</code>, min 2 / max 4) + <code>aws_appautoscaling_policy</code> with <code>TargetTrackingScaling</code> on <code>ECSServiceAverageCPUUtilization</code> (target ~60%). <strong>[Extra]</strong> a second policy on <code>ALBRequestCountPerTarget</code>.</li>
+</ul>
+<p><strong>Outputs:</strong> <code>cluster_name</code>, <code>service_name</code>, <code>task_definition_family</code>, <code>log_group_name</code>, <code>task_execution_role_arn</code>, <code>task_role_arn</code>.</p>
+<p><strong>Docs:</strong> ECS Developer Guide → <em>Task definition parameters</em>, <em>Pass Secrets Manager secrets through Amazon ECS environment variables</em>, <em>Task execution IAM role</em>, <em>Task IAM role</em>, <em>Deployment circuit breaker</em>, <em>Service auto scaling</em>, <em>Amazon ECS Container Insights metrics</em>; registry pages for each resource.</p>
+<h3>6.9 Environment roots (<code>envs/staging</code>, <code>envs/production</code>)</h3>
+<p><code>main.tf</code> calls the modules and wires outputs → inputs (network outputs → alb/ecs/rds; rds secret ARN → ecs; alb target group → ecs; everything → monitoring). Read shared outputs either by passing values in <code>terraform.tfvars</code> (simple, explicit) or via <code>data &quot;terraform_remote_state&quot;</code> (coupled but automatic) — pick one and justify.</p>
+<p><code>variables.tf</code> at env level should include: <code>project</code>, <code>environment</code>, <code>aws_region</code>, <code>vpc_cidr</code>, <code>single_nat_gateway</code>, <code>app_image</code>, <code>app_port</code>, <code>app_cpu</code>, <code>app_memory</code>, <code>desired_count</code>, <code>min_capacity</code>, <code>max_capacity</code>, <code>db_instance_class</code>, <code>db_multi_az</code>, <code>db_backup_retention_days</code>, <code>db_deletion_protection</code>, <code>log_retention_days</code>, <code>alert_email</code>, <code>use_fargate_spot</code>.</p>
+<p><code>outputs.tf</code> (requirement 1.4): <code>alb_url</code> (formatted <code>http://&lt;dns&gt;</code>), <code>ecs_cluster_name</code>, <code>ecs_service_name</code>, <code>task_family</code>, <code>rds_endpoint</code>, <code>db_secret_arn</code> (mark sensitive if you like — it's an ARN, not the secret, but showing judgment is good), <code>cloudwatch_dashboard_urls</code>, <code>deploy_role_arn</code>. These outputs are what you'll paste into GitHub environment variables.</p>
+<p>Apply order (write this exact sequence in the README):</p>
+<ol>
+<li><code>infra/bootstrap</code> → <code>terraform init &amp;&amp; terraform apply</code></li>
+<li><code>infra/envs/shared</code> → init/plan/apply</li>
+<li>Build &amp; push first image manually</li>
+<li><code>infra/envs/staging</code> → <code>terraform init</code>, <code>terraform plan -out=tfplan</code>, <code>terraform apply tfplan</code></li>
+<li>Same for <code>production</code> (when ready)</li>
+</ol>
+<p>Always use <code>plan -out</code> then apply the saved plan — it guarantees what you reviewed is what gets applied. Good practice to mention.</p>
+<p><strong>Done when:</strong> opening <code>alb_url</code> in a browser shows your app, <code>/api/items</code> reads/writes to RDS, ECS service shows 2 healthy tasks, target group shows healthy targets, logs appear in CloudWatch.</p>
+<hr>
+<h2>7. Phase 2 — CI/CD with GitHub Actions</h2>
+<h3>7.1 GitHub repository configuration (do this in the UI before writing workflows)</h3>
+<ul>
+<li><strong>Branch protection / ruleset on <code>main</code></strong>: require pull request, require status checks (your CI jobs) to pass, block force pushes.</li>
+<li><strong>Environments</strong> (Settings → Environments):
+<ul>
+<li><code>staging</code> — no protection; environment <strong>variables</strong>: <code>AWS_ROLE_ARN</code>, <code>ECS_CLUSTER</code>, <code>ECS_SERVICE</code>, <code>TASK_FAMILY</code>, <code>APP_URL</code>.</li>
+<li><code>production</code> — <strong>Required reviewers: yourself</strong> (this is the manual approval step); optionally restrict deployment branches to <code>main</code> and add a wait timer. Same variables with prod values.</li>
+</ul>
+</li>
+<li><strong>Repository secrets</strong>: <code>SLACK_WEBHOOK_URL</code> (and SMTP creds if using email). <strong>No AWS access keys anywhere</strong> — OIDC handles auth.</li>
+<li><strong>Repository variables</strong>: <code>AWS_REGION</code>, <code>ECR_REPOSITORY</code>.</li>
+</ul>
+<p><strong>Docs:</strong> GitHub Docs → <em>Managing environments for deployment</em> (read <em>Required reviewers</em> and <em>Deployment branches</em>), <em>About protected branches / rulesets</em>, <em>Using secrets in GitHub Actions</em>, <em>Store information in variables</em>.</p>
+<h3>7.2 <code>ci.yml</code> — runs on every PR</h3>
+<p>Trigger: <code>on: pull_request</code> targeting <code>main</code>. Top-level <code>permissions: contents: read</code> (least privilege — default token permissions are broader than needed). Add a <code>concurrency</code> group keyed on the PR so new pushes cancel stale runs.</p>
+<p>Jobs (run in parallel where independent):</p>
+<ol>
+<li><strong><code>lint</code></strong>
+<ul>
+<li>checkout (<code>actions/checkout</code>), setup language (<code>actions/setup-python</code> with pip cache),</li>
+<li>code linter (ruff/flake8 or eslint),</li>
+<li>Dockerfile lint (<code>hadolint/hadolint-action</code>),</li>
+<li>Terraform: <code>hashicorp/setup-terraform</code>, <code>terraform fmt -check -recursive</code>, and for each root <code>terraform init -backend=false</code> + <code>terraform validate</code>,</li>
+<li><strong>[Extra]</strong> <code>tflint</code>, <strong>Checkov</strong> (<code>bridgecrewio/checkov-action</code>) for IaC misconfigurations — triage findings; suppress any you intentionally accept <em>with a comment explaining why</em> (e.g. &quot;no HTTPS: no domain for demo&quot;).</li>
+</ul>
+</li>
+<li><strong><code>unit-tests</code></strong> — install deps, run unit-marked tests with coverage; upload the coverage report as an artifact (<code>actions/upload-artifact</code>).</li>
+<li><strong><code>integration-tests</code></strong> — job-level <code>services:</code> block with a <code>postgres:16</code> container (env: user/password/db; <code>options</code> with <code>--health-cmd pg_isready</code> and health intervals; <code>ports: 5432:5432</code>); job <code>env</code> sets <code>DB_HOST=localhost</code> etc.; run integration-marked tests.</li>
+<li><strong><code>security-scan</code></strong>
+<ul>
+<li>dependency scan: <code>pip-audit</code> / <code>npm audit --audit-level=high</code>, <strong>or</strong> Trivy filesystem mode,</li>
+<li>build the image without pushing (<code>docker/setup-buildx-action</code> + <code>docker/build-push-action</code> with <code>load: true</code>, <code>push: false</code>), with GitHub Actions cache (<code>cache-from/to: type=gha</code>) <strong>[Extra]</strong>,</li>
+<li>container scan with <code>aquasecurity/trivy-action</code> on the built image, <code>severity: CRITICAL,HIGH</code>, <code>exit-code: 1</code>, <code>ignore-unfixed: true</code> (don't fail on CVEs with no fix available — explain this pragmatic choice),</li>
+<li><strong>[Extra]</strong> output SARIF and upload with <code>github/codeql-action/upload-sarif</code> (needs <code>security-events: write</code>) so findings show in the Security tab,</li>
+<li><strong>[Extra]</strong> secret scanning with <code>gitleaks</code>.</li>
+</ul>
+</li>
+<li><strong><code>notify-on-failure</code></strong> — <code>needs: [lint, unit-tests, integration-tests, security-scan]</code>, <code>if: failure()</code>, posts to Slack using <code>slackapi/slack-github-action</code> with the webhook secret. Include repo, workflow name, branch/PR, actor, and a link to the run (<code>github.server_url</code>/<code>github.repository</code>/<code>github.run_id</code> context values). Email alternative: an SMTP action such as <code>dawidd6/action-send-mail</code>.</li>
+</ol>
+<p><strong>[Extra]</strong> <code>terraform-plan</code> job on PRs that change <code>infra/**</code> (<code>paths</code> filter), using a read-only OIDC role, posting the plan as a PR comment. Shows mature IaC workflow.</p>
+<p><strong>Docs:</strong> GitHub Docs → <em>Workflow syntax for GitHub Actions</em> (<code>on</code>, <code>jobs</code>, <code>needs</code>, <code>if</code>, <code>permissions</code>, <code>concurrency</code>, <code>environment</code>, <code>outputs</code>), <em>About service containers</em> → <em>Creating PostgreSQL service containers</em>, <em>Expressions → Status check functions</em> (<code>failure()</code>, <code>always()</code>), <em>Contexts</em>; READMEs of each action listed (they're the real docs — read the inputs table).</p>
+<h3>7.3 <code>cd.yml</code> — runs on merge to <code>main</code></h3>
+<p>Trigger: <code>on: push</code> to <code>main</code> (plus <code>workflow_dispatch</code> for manual reruns). <code>permissions: id-token: write, contents: read</code> (id-token is required for OIDC). <code>concurrency: deploy-${{ github.ref }}</code> with <code>cancel-in-progress: false</code> (never cancel a deploy halfway).</p>
+<p><strong>[Extra, recommended]</strong> Put the CI jobs in a reusable workflow (<code>on: workflow_call</code>) and call it from both <code>ci.yml</code> and <code>cd.yml</code>, so the exact same tests gate deploys — DRY and a strong design point.</p>
+<p>Jobs:</p>
+<ol>
+<li><strong><code>test</code></strong> — call the reusable CI workflow (or rerun unit/integration tests).</li>
+<li><strong><code>build-and-push</code></strong> (<code>needs: test</code>)
+<ul>
+<li><code>aws-actions/configure-aws-credentials</code> with <code>role-to-assume</code> and <code>aws-region</code> (OIDC),</li>
+<li><code>aws-actions/amazon-ecr-login</code>,</li>
+<li>build image tagged with <strong><code>${{ github.sha }}</code></strong> (immutable, traceable to a commit — never deploy <code>latest</code>),</li>
+<li>Trivy scan the image <strong>before</strong> pushing; fail on critical/high,</li>
+<li>push; expose the full image URI as a <strong>job output</strong> for later jobs.</li>
+</ul>
+</li>
+<li><strong><code>deploy-staging</code></strong> (<code>needs: build-and-push</code>, <code>environment: { name: staging, url: &lt;APP_URL var&gt; }</code>)
+<ul>
+<li>configure AWS creds with the staging role,</li>
+<li>fetch the current task definition (<code>aws ecs describe-task-definition --task-definition &lt;family&gt; --query taskDefinition &gt; task-def.json</code>),</li>
+<li><code>aws-actions/amazon-ecs-render-task-definition</code> to swap in the new image URI,</li>
+<li><code>aws-actions/amazon-ecs-deploy-task-definition</code> with <code>wait-for-service-stability: true</code> (job fails if the rollout fails; the circuit breaker rolls back),</li>
+<li>run <code>scripts/smoke-test.sh &lt;APP_URL&gt;</code> (bash: curl <code>/health</code> and <code>/ready</code> with retries and a timeout; non-zero exit on failure).</li>
+</ul>
+</li>
+<li><strong><code>deploy-production</code></strong> (<code>needs: [build-and-push, deploy-staging]</code>, <code>environment: production</code>)
+<ul>
+<li><strong>the job pauses here until you approve in the GitHub UI</strong> — that's requirement 2.1's manual approval,</li>
+<li>identical steps with prod variables and the <strong>same image URI</strong> from <code>build-and-push</code> (build once, promote — never rebuild for prod),</li>
+<li>smoke test prod.</li>
+</ul>
+</li>
+<li><strong><code>notify</code></strong> — on failure (<code>if: failure()</code>), Slack message; <strong>[Extra]</strong> also notify success of production deploys with the commit SHA and approver.</li>
+</ol>
+<p>Why fetch the task definition from AWS instead of keeping a JSON file in the repo? Because Terraform owns the task definition shape (env vars, secrets, roles); the pipeline only changes the image. This avoids two sources of truth. Explain this in the README — interviewers love seeing that you thought about Terraform vs pipeline ownership.</p>
+<p><strong>Rollback story (write it in <code>docs/runbook.md</code>):</strong> (a) automatic — circuit breaker; (b) manual — rerun <code>cd.yml</code> deploy jobs for an earlier commit via <code>workflow_dispatch</code> with an image-tag input <strong>[Extra]</strong>, or <code>aws ecs update-service --task-definition &lt;previous-revision&gt;</code>. Immutable SHA tags make every previous version available.</p>
+<p><strong>Docs:</strong> README of <code>aws-actions/configure-aws-credentials</code>, <code>aws-actions/amazon-ecr-login</code>, <code>aws-actions/amazon-ecs-render-task-definition</code>, <code>aws-actions/amazon-ecs-deploy-task-definition</code>; GitHub Docs → <em>Deploying to Amazon Elastic Container Service</em> (official guide — your primary reference for this file), <em>Reusing workflows</em>, <em>Defining outputs for jobs</em>; <code>slackapi/slack-github-action</code> README (incoming-webhook technique); Slack docs → <em>Sending messages using incoming webhooks</em>.</p>
+<p><strong>Done when:</strong> a PR shows all CI checks green (and you've seen one fail and notify Slack — deliberately break a test once and screenshot the Slack message); merging deploys to staging automatically; production waits for approval; after approval prod updates; both smoke tests pass.</p>
+<hr>
+<h2>8. Phase 3 — Monitoring, logging, dashboards</h2>
+<p>Build everything in <code>modules/monitoring</code> as code. &quot;Dashboards as code&quot; is itself a best practice worth stating.</p>
+<h3>8.1 Metrics — where each required metric comes from</h3>
+<table>
+<thead>
+<tr>
+<th>Requirement</th>
+<th>Source</th>
+<th>Metric names (namespace)</th>
+<th>Dimensions</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>CPU</td>
+<td>Container Insights / ECS</td>
+<td><code>CpuUtilized</code>, <code>CpuReserved</code> (<code>ECS/ContainerInsights</code>); <code>CPUUtilization</code> (<code>AWS/ECS</code>)</td>
+<td><code>ClusterName</code>, <code>ServiceName</code></td>
+</tr>
+<tr>
+<td>Memory</td>
+<td>same</td>
+<td><code>MemoryUtilized</code>, <code>MemoryReserved</code>; <code>MemoryUtilization</code></td>
+<td>same</td>
+</tr>
+<tr>
+<td>Disk</td>
+<td>Container Insights (Fargate) + RDS</td>
+<td><code>EphemeralStorageUtilized</code>, <code>EphemeralStorageReserved</code>; RDS <code>FreeStorageSpace</code></td>
+<td>same / <code>DBInstanceIdentifier</code></td>
+</tr>
+<tr>
+<td>Request rate</td>
+<td>ALB</td>
+<td><code>RequestCount</code> (<code>AWS/ApplicationELB</code>, stat Sum, 1-min period)</td>
+<td><code>LoadBalancer</code> = ALB <strong>arn_suffix</strong></td>
+</tr>
+<tr>
+<td>Error rate</td>
+<td>ALB</td>
+<td><code>HTTPCode_Target_5XX_Count</code>, <code>HTTPCode_ELB_5XX_Count</code>, <code>HTTPCode_Target_4XX_Count</code>; compute % with a <strong>metric math</strong> expression (5XX / RequestCount × 100)</td>
+<td>same</td>
+</tr>
+<tr>
+<td>Latency</td>
+<td>ALB</td>
+<td><code>TargetResponseTime</code> with <strong>p50, p95, p99</strong> statistics (averages hide tail latency — say this)</td>
+<td>same, plus <code>TargetGroup</code></td>
+</tr>
+<tr>
+<td>Health</td>
+<td>ALB</td>
+<td><code>HealthyHostCount</code>, <code>UnHealthyHostCount</code></td>
+<td><code>TargetGroup</code>, <code>LoadBalancer</code></td>
+</tr>
+<tr>
+<td>Database</td>
+<td>RDS</td>
+<td><code>CPUUtilization</code>, <code>FreeableMemory</code>, <code>FreeStorageSpace</code>, <code>DatabaseConnections</code>, <code>ReadLatency</code>, <code>WriteLatency</code>, <code>ReadIOPS</code>, <code>WriteIOPS</code> (<code>AWS/RDS</code>)</td>
+<td><code>DBInstanceIdentifier</code></td>
+</tr>
+</tbody>
+</table>
+<p>Verify exact metric names in the console (CloudWatch → Metrics → All metrics) before putting them in dashboards — a typo gives an empty widget, not an error.</p>
+<p><strong>[Extra] Custom application metrics:</strong> emit business/app metrics from your code using CloudWatch <strong>Embedded Metric Format</strong> (a specially structured JSON log line that CloudWatch turns into metrics automatically, no agent needed). Or expose Prometheus <code>/metrics</code> and mention the path to Amazon Managed Prometheus via an ADOT collector sidecar as future work.</p>
+<h3>8.2 Dashboards — <code>aws_cloudwatch_dashboard</code> (at least two)</h3>
+<p><code>dashboard_body = jsonencode({ widgets = [...] })</code>. Build each dashboard once by hand in the console, then use <strong>Actions → View/edit source</strong> to see the JSON structure, and recreate it in Terraform with variables substituted. This is a legitimate and fast way to learn the schema.</p>
+<p><strong>Dashboard 1 — &quot;Application Golden Signals&quot;</strong> (<code>&lt;prefix&gt;-application</code>)</p>
+<ul>
+<li>Request rate (RequestCount sum/min)</li>
+<li>Error rate % (metric math) + raw 4XX/5XX counts</li>
+<li>Latency p50/p95/p99</li>
+<li>Healthy/unhealthy targets, running task count</li>
+<li>A <strong>Logs Insights widget</strong> showing the latest error lines from the app log group</li>
+<li>Text widget at top explaining what &quot;good&quot; looks like (SLO-style: p95 &lt; 500 ms, error rate &lt; 1%) <strong>[Extra]</strong> — shows SRE thinking</li>
+</ul>
+<p><strong>Dashboard 2 — &quot;Infrastructure &amp; Database&quot;</strong> (<code>&lt;prefix&gt;-infrastructure</code>)</p>
+<ul>
+<li>ECS CPU &amp; memory utilisation vs reserved, task count, ephemeral storage, network rx/tx</li>
+<li>RDS CPU, freeable memory, free storage, connections, read/write latency, IOPS</li>
+<li>NAT gateway bytes / ALB processed bytes <strong>[Extra]</strong> (cost visibility)</li>
+</ul>
+<p><strong>[Extra] Grafana:</strong> run Grafana locally with Docker (<code>monitoring/grafana/docker-compose.yml</code>), provision the <strong>CloudWatch data source</strong> via a provisioning YAML (authenticate with a read-only IAM role/profile), and commit dashboard JSON files. This demonstrates the Grafana skill from the JD at zero AWS cost. Docs: Grafana → <em>Amazon CloudWatch data source</em>, <em>Provisioning</em>.</p>
+<h3>8.3 Alarms → notifications</h3>
+<ul>
+<li><code>aws_sns_topic</code> + <code>aws_sns_topic_subscription</code> (protocol <code>email</code> — you must click the confirmation email; note in challenges log).</li>
+<li><code>aws_cloudwatch_metric_alarm</code>s with <code>alarm_actions</code> and <code>ok_actions</code> → SNS:
+<ul>
+<li>ALB 5XX error rate &gt; 5% for 5 min (metric math alarm),</li>
+<li>TargetResponseTime p95 &gt; 1 s,</li>
+<li>UnHealthyHostCount &gt; 0 for 3 min,</li>
+<li>ECS CPU &gt; 80% / memory &gt; 80%,</li>
+<li>RDS CPU &gt; 80%, FreeStorageSpace &lt; 2 GB, FreeableMemory low, DatabaseConnections high.</li>
+</ul>
+</li>
+<li>Set <code>treat_missing_data</code> deliberately (e.g. <code>notBreaching</code> for 5XX counts that are absent when there's no traffic) — explain it.</li>
+<li><strong>[Extra]</strong> Slack for alarms via <em>Amazon Q Developer in chat applications</em> (formerly AWS Chatbot) subscribed to the SNS topic.</li>
+</ul>
+<h3>8.4 Centralised logging — the three required categories</h3>
+<table>
+<thead>
+<tr>
+<th>Category</th>
+<th>What</th>
+<th>Where</th>
+<th>How (Terraform)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Application logs</strong></td>
+<td>JSON stdout from containers</td>
+<td>CloudWatch Logs <code>/ecs/&lt;prefix&gt;</code></td>
+<td><code>awslogs</code> driver in task def; log group with retention</td>
+</tr>
+<tr>
+<td><strong>Access logs</strong></td>
+<td>Every HTTP request at the edge</td>
+<td>S3 bucket (ALB access logs) + app-level request logs in CloudWatch</td>
+<td><code>access_logs</code> on <code>aws_lb</code>; <strong>[Extra]</strong> Athena table to query them</td>
+</tr>
+<tr>
+<td><strong>System logs</strong></td>
+<td>Network flows, platform events, DB engine logs</td>
+<td>CloudWatch Logs</td>
+<td>VPC Flow Logs (<code>aws_flow_log</code>); ECS task/service/deployment events via <strong>EventBridge</strong> (<code>aws_cloudwatch_event_rule</code> with <code>source = [&quot;aws.ecs&quot;]</code> → <code>aws_cloudwatch_event_target</code> → a log group, plus <code>aws_cloudwatch_log_resource_policy</code> allowing <code>events.amazonaws.com</code> to write); RDS <code>postgresql</code> log export; <strong>[Extra]</strong> CloudTrail for API audit logs</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Explain the Fargate &quot;system logs&quot; nuance in the README</strong> (this is where you show maturity): on Fargate there is no host OS you manage, so traditional syslog/journald doesn't exist for you to collect — AWS operates that layer. The system-level signals that <em>are</em> yours — network flows, container lifecycle events (OOM kills, failed health checks, stopped tasks with reasons), database engine logs, and API audit — are all centralised. If OS-level logs are required, the EC2-based alternative would run the <strong>CloudWatch agent</strong> shipping <code>/var/log/messages</code>/journald. <strong>[Extra]</strong> If you want to show this concretely, add a tiny EC2 instance (e.g. a bastion accessed only via <strong>SSM Session Manager</strong> — no SSH port open) with the CloudWatch agent installed via <code>user_data</code>.</p>
+<p><strong>Saved queries:</strong> <code>aws_cloudwatch_query_definition</code> for &quot;errors in last hour&quot;, &quot;slowest requests (p95 by path)&quot;, &quot;requests by status code&quot;. Example of what they do: filter JSON logs where <code>level = &quot;ERROR&quot;</code>, <code>stats count() by bin(5m)</code>. <strong>Docs:</strong> CloudWatch Logs → <em>CloudWatch Logs Insights query syntax</em>.</p>
+<p><strong>Retention on every log group</strong> (7 days staging, 30 prod) — cost and compliance talking point.</p>
+<p><strong>Why CloudWatch and not ELK/Loki?</strong> Zero infrastructure to run, native integration, pay-per-use; a self-hosted ELK or OpenSearch cluster would cost more than the entire app for this scale. Mention OpenSearch/Loki or Datadog as options at higher scale or for multi-cloud.</p>
+<p><strong>Docs:</strong> CloudWatch User Guide → <em>Using Amazon CloudWatch dashboards</em> (and <em>Dashboard Body Structure and Syntax</em> in the API reference), <em>Using metric math</em>, <em>Alarms</em>; ECS → <em>Container Insights metrics</em>; ALB → <em>CloudWatch metrics for your Application Load Balancer</em>; RDS → <em>Metrics reference for Amazon RDS</em>; EventBridge → <em>Amazon ECS events</em>.</p>
+<p><strong>Done when:</strong> both dashboards populate (generate traffic with a quick bash loop of <code>curl</code>, or <code>hey</code>/<code>ab</code>), at least one alarm has fired and emailed you (e.g. temporarily lower a threshold), logs are visible in all three categories.</p>
+<hr>
+<h2>9. Phase 4 — Secrets, backups, and the README</h2>
+<h3>9.1 Secret management (deliverable 4.2) — what you have and how to describe it</h3>
+<ul>
+<li>DB credentials: generated by RDS, stored and encrypted in <strong>AWS Secrets Manager</strong>, automatically rotated, injected into containers at start via ECS <code>secrets</code> — <strong>never</strong> in code, tfvars, Terraform state, images, or GitHub.</li>
+<li>CI → AWS: <strong>OIDC</strong> short-lived credentials; no static keys exist.</li>
+<li>Slack webhook: GitHub encrypted secret, masked in logs.</li>
+<li>Execution role can read <strong>only that one secret ARN</strong>.</li>
+<li><strong>[Extra]</strong> <code>gitleaks</code> in CI and a pre-commit hook; <code>.gitignore</code> for <code>.env</code>, <code>*.tfvars</code> with secrets.</li>
+<li>Known gap (honesty scores points): rotation vs running tasks (see 6.7).</li>
+</ul>
+<h3>9.2 Backup strategy (deliverable 4.2)</h3>
+<ul>
+<li><strong>RDS automated backups</strong> with point-in-time recovery (retention per env), daily snapshots in the backup window.</li>
+<li><strong>Final snapshot</strong> on deletion in prod, <strong>deletion protection</strong> on.</li>
+<li><strong>Terraform state</strong>: S3 versioning (any state version recoverable).</li>
+<li><strong>Container images</strong>: immutable SHA tags in ECR = rollback artifacts.</li>
+<li><strong>[Extra] AWS Backup</strong> module: <code>aws_backup_vault</code>, <code>aws_backup_plan</code> (daily rule with <code>schedule</code> cron, <code>lifecycle { delete_after }</code>, <strong><code>copy_action</code> to a vault in another region</strong> e.g. <code>ap-south-2</code> Hyderabad for DR), <code>aws_backup_selection</code> by tag (e.g. <code>Backup = true</code>) with an IAM role using the AWS managed backup service policy.</li>
+<li><strong>[Extra, high impact] Do one restore drill</strong>: restore a point-in-time copy to a new instance (<code>aws rds restore-db-instance-to-point-in-time</code>), connect, verify rows, delete it. Record the time taken as your measured RTO and document the steps in <code>docs/runbook.md</code>. &quot;A backup you haven't restored is a hope, not a backup&quot; — say that line in the video.</li>
+</ul>
+<p><strong>Docs:</strong> RDS → <em>Restoring a DB instance to a specified time</em>; AWS Backup Developer Guide → <em>Creating a backup plan</em>, <em>Cross-Region backup</em>.</p>
+<h3>9.3 README.md structure (write it in your own words)</h3>
+<ol>
+<li><strong>Title + one-paragraph summary</strong> and the architecture diagram image.</li>
+<li><strong>Live demo / screenshots</strong> (ALB URL may be down after teardown — include screenshots of app, pipeline runs, approval screen, dashboards, Slack alert).</li>
+<li><strong>Repository structure</strong> (tree with one-line descriptions).</li>
+<li><strong>Architecture</strong> — components and data flow; the diagram.</li>
+<li><strong>Architecture decisions</strong> — a short table: decision, alternatives considered, why (ECS vs EKS, separate state per env vs workspaces, single vs multi NAT, CloudWatch vs ELK, OIDC vs access keys, RDS-managed secret vs manual secret, immutable tags, Terraform vs pipeline ownership of task definition).</li>
+<li><strong>Prerequisites</strong> (tools + versions, AWS account, GitHub settings).</li>
+<li><strong>Setup &amp; run</strong> — numbered steps from Section 6.9 including the first-image bootstrap, GitHub environment/secret setup, how to trigger the pipeline, how to approve prod.</li>
+<li><strong>CI/CD pipeline</strong> — diagram or table of jobs and gates.</li>
+<li><strong>Monitoring &amp; logging</strong> — what's collected, dashboards (screenshots), alarms list, where to find each log type.</li>
+<li><strong>Security considerations</strong> — network isolation, SG chaining, encryption at rest/in transit, IAM least privilege (task vs execution role), OIDC, Secrets Manager, image scanning, non-root containers, S3 public access blocks, <code>drop_invalid_header_fields</code>; plus <strong>known gaps &amp; next steps</strong> (HTTPS/ACM, WAF, GuardDuty, Security Hub, KMS CMKs, SCPs, image signing with cosign).</li>
+<li><strong>Cost optimisation</strong> — Fargate Spot in staging, ARM64/Graviton, single NAT in staging, t4g.micro + gp3, storage autoscaling, log retention, ECR lifecycle, S3 lifecycle on logs, <code>default_tags</code> for cost allocation, AWS Budget alert, S3 gateway endpoint, destroy non-prod when idle; a rough monthly estimate per environment made with the <strong>AWS Pricing Calculator</strong> (do the estimate yourself; NAT gateway + ALB + RDS are typically the biggest fixed costs for a small setup like this).</li>
+<li><strong>Backup &amp; DR</strong> — section 9.2.</li>
+<li><strong>Teardown</strong> — reverse order: prod, staging, shared, (bootstrap last, after emptying the bucket). Note deletion protection must be disabled first in prod.</li>
+<li><strong>What I'd add with more time</strong> — EKS migration, blue/green with CodeDeploy, HTTPS + WAF, Terraform plan in PRs, drift detection on a schedule, OPA/conftest policies, multi-account (AWS Organizations: separate staging/prod accounts), DB migrations as a pipeline step, SLOs and error budgets, Prometheus/Grafana, canary deploys, cosign + SBOM.</li>
+</ol>
+<hr>
+<h2>10. Phase 5 — Production environment and final validation</h2>
+<ol>
+<li>Create <code>envs/production</code> by copying staging's root and changing only tfvars/backend key (if you find yourself changing module code, your modules aren't parameterised enough — fix that).</li>
+<li>Apply. Configure the <code>production</code> GitHub environment variables with its outputs.</li>
+<li>Run a full flow: open a PR with a visible change (e.g. version string on the homepage) → CI green → merge → staging updates → approve → prod updates.</li>
+<li><strong>Failure drills (screenshots for README/video):</strong>
+<ul>
+<li>a failing unit test on a PR → Slack notification,</li>
+<li>a Trivy failure (e.g. temporarily use an old base image) → pipeline blocked,</li>
+<li><strong>[Extra]</strong> a broken image (e.g. app exits on start) → circuit breaker auto-rollback in staging,</li>
+<li>an alarm firing → email.</li>
+</ul>
+</li>
+</ol>
+<hr>
+<h2>11. Challenges document (PDF/Word deliverable)</h2>
+<p>Convert your running <code>CHALLENGES.md</code> log. Format each entry:</p>
+<blockquote>
+<p><strong>Challenge N — short title</strong>
+<em>Context:</em> what you were doing.
+<em>Symptom:</em> exact error message / behaviour.
+<em>Investigation:</em> what you checked (logs, console, docs) and hypotheses ruled out.
+<em>Root cause:</em> the actual reason.
+<em>Resolution:</em> what you changed (link the commit).
+<em>Prevention / lesson:</em> how you'd avoid it next time.</p>
+</blockquote>
+<p>Likely genuine challenges you'll hit (don't invent them — only include those that actually happen to you): ECS tasks failing to pull images or fetch secrets from private subnets; target group health checks failing (wrong port/path, wrong <code>target_type</code>); secret <code>valueFrom</code> syntax; ALB access-log bucket policy denied; Terraform/pipeline fighting over task definition revisions; OIDC &quot;Not authorized to perform sts:AssumeRoleWithWebIdentity&quot; (usually a <code>sub</code> condition mismatch — check the exact claim format for environment jobs); architecture mismatch from building on Apple Silicon; RDS destroy blocked by deletion protection/final snapshot; SNS email not confirmed; empty dashboard widgets from wrong dimensions (<code>arn</code> vs <code>arn_suffix</code>). Also add a closing section: <strong>trade-offs knowingly made</strong> (no HTTPS, single region, etc.).</p>
+<hr>
+<h2>12. Loom video (5–8 minutes) — suggested script</h2>
+<ol>
+<li><strong>(30s)</strong> Who you are, what you built, architecture diagram.</li>
+<li><strong>(1.5 min)</strong> Repo tour: modules, env roots, backend config, a quick look at one module showing variables/outputs/validation.</li>
+<li><strong>(2 min)</strong> Live pipeline: open a PR → CI checks → merge → staging deploy → <strong>approve production in GitHub UI</strong> → show updated app on the ALB URL.</li>
+<li><strong>(1.5 min)</strong> Dashboards (generate a little traffic first), an alarm, Logs Insights query, ALB access logs in S3.</li>
+<li><strong>(1 min)</strong> Security &amp; secrets: OIDC role trust policy, Secrets Manager secret (show it exists, don't reveal value), SG chain.</li>
+<li><strong>(30s)</strong> Backups (+ restore drill result), cost measures, what you'd do next.</li>
+</ol>
+<p>Record after a rehearsal. Speak to <em>why</em>, not just <em>what</em>. Keep the AWS console tabs pre-opened. Don't show secret values or account-sensitive data.</p>
+<hr>
+<h2>13. Suggested 3-day schedule</h2>
+<p>Realistic note: 9–12 hours assumes prior familiarity. If ECS or OIDC is new to you, budget extra and protect the happy path.</p>
+<table>
+<thead>
+<tr>
+<th>Day</th>
+<th>Block</th>
+<th>Tasks</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Day 1</strong> (~4–5 h)</td>
+<td>Setup</td>
+<td>AWS account hygiene, budget, CLI profile, tools, repo skeleton, Slack webhook</td>
+</tr>
+<tr>
+<td></td>
+<td>App</td>
+<td>Write app, tests, Dockerfile, compose; tests green locally</td>
+</tr>
+<tr>
+<td></td>
+<td>IaC</td>
+<td>bootstrap state; <code>shared</code> (ECR + OIDC); push first image; <code>network</code> module</td>
+</tr>
+<tr>
+<td><strong>Day 2</strong> (~4–5 h)</td>
+<td>IaC</td>
+<td>security groups, ALB, RDS, ECS modules → <strong>staging live behind ALB</strong> (happy-path milestone)</td>
+</tr>
+<tr>
+<td></td>
+<td>CI/CD</td>
+<td>GitHub environments/secrets; <code>ci.yml</code>; <code>cd.yml</code> with staging deploy; prod approval job; Slack notifications</td>
+</tr>
+<tr>
+<td><strong>Day 3</strong> (~4 h)</td>
+<td>Observability</td>
+<td>monitoring module: log groups, flow logs, EventBridge, alarms, 2 dashboards</td>
+</tr>
+<tr>
+<td></td>
+<td>Prod &amp; polish</td>
+<td>production env, full flow, failure drills, backup (+ restore drill)</td>
+</tr>
+<tr>
+<td></td>
+<td>Docs</td>
+<td>README, diagram, challenges doc → PDF, Loom, final review, decide on teardown</td>
+</tr>
+</tbody>
+</table>
+<p>Checkpoint rule: if by end of Day 2 staging isn't deploying via the pipeline, skip all <strong>[Extra]</strong> items and finish the core.</p>
+<hr>
+<h2>14. Troubleshooting quick reference</h2>
+<table>
+<thead>
+<tr>
+<th>Symptom</th>
+<th>Likely cause</th>
+<th>Where to look</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Task stops with <code>ResourceInitializationError</code> (pull image / retrieve secret)</td>
+<td>No route to internet (NAT missing/wrong route table), wrong secret ARN/JSON-key syntax, execution role missing <code>GetSecretValue</code></td>
+<td>ECS → task → <em>Stopped reason</em>; route tables</td>
+</tr>
+<tr>
+<td>Tasks keep restarting, target &quot;unhealthy&quot;</td>
+<td>Health check path/port wrong, app binds to <code>127.0.0.1</code> instead of <code>0.0.0.0</code>, grace period too short, SG doesn't allow ALB → app port</td>
+<td>Target group → Targets → health status reason; app logs</td>
+</tr>
+<tr>
+<td>Target group creation/attach error with Fargate</td>
+<td><code>target_type</code> not <code>ip</code></td>
+<td>registry <code>aws_lb_target_group</code></td>
+</tr>
+<tr>
+<td>Terraform keeps &quot;changing&quot; task definition back</td>
+<td>Missing <code>ignore_changes = [task_definition]</code> on the service</td>
+<td>plan output</td>
+</tr>
+<tr>
+<td><code>exec format error</code> in container logs</td>
+<td>Built on ARM, running on X86_64 (or vice versa)</td>
+<td><code>runtime_platform</code>, <code>docker build --platform</code></td>
+</tr>
+<tr>
+<td>OIDC assume role denied</td>
+<td><code>sub</code> condition doesn't match (<code>environment:</code> vs <code>ref:</code> claim), missing <code>id-token: write</code> permission, wrong <code>aud</code></td>
+<td>GitHub Docs → OIDC claims reference</td>
+</tr>
+<tr>
+<td>ALB fails to create with access logs</td>
+<td>S3 bucket policy principal/region, or KMS encryption on bucket</td>
+<td>ALB access logs doc</td>
+</tr>
+<tr>
+<td>Production job never asks for approval</td>
+<td>Environment protection not configured / private repo on free plan</td>
+<td>Settings → Environments</td>
+</tr>
+<tr>
+<td>Empty dashboard widgets</td>
+<td>Wrong metric name/dimension, used full ARN instead of <code>arn_suffix</code>, wrong region in widget</td>
+<td>CloudWatch Metrics explorer</td>
+</tr>
+<tr>
+<td><code>terraform destroy</code> fails on RDS / S3 / ECR</td>
+<td>deletion protection, final snapshot required, non-empty bucket/repo</td>
+<td>set protection false then apply; <code>force_destroy</code>/<code>force_delete</code> in non-prod</td>
+</tr>
+<tr>
+<td>Integration tests can't connect in CI</td>
+<td>Service container not healthy yet (add health options), using service name vs <code>localhost</code> (job runs on runner → use <code>localhost</code> + mapped port)</td>
+<td>GitHub service containers doc</td>
+</tr>
+<tr>
+<td>Slack step &quot;invalid_payload&quot;</td>
+<td>Payload format/webhook technique mismatch</td>
+<td>slack-github-action README</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2>15. Documentation index (bookmark these)</h2>
+<p><strong>Terraform</strong></p>
+<ul>
+<li>Terraform Language docs — variables, outputs, locals, modules, <code>for_each</code>, functions, <code>lifecycle</code>: developer.hashicorp.com/terraform/language</li>
+<li>S3 backend (state + <code>use_lockfile</code>): developer.hashicorp.com → <em>Backend Type: s3</em></li>
+<li>AWS provider docs (every resource page) + <em>Version 6 Upgrade Guide</em>: registry.terraform.io/providers/hashicorp/aws/latest/docs</li>
+<li>HashiCorp tutorials: <em>Get Started – AWS</em>, <em>Build and use a local module</em>, <em>Manage resource drift</em> (good refresher)</li>
+</ul>
+<p><strong>AWS</strong> (docs.aws.amazon.com)</p>
+<ul>
+<li>VPC User Guide — subnets, route tables, NAT gateways, security groups, flow logs, gateway endpoints</li>
+<li>Elastic Load Balancing — Application Load Balancers: target groups, health checks, access logs, CloudWatch metrics</li>
+<li>Amazon ECS Developer Guide — task definition parameters, Fargate, task execution role vs task role, secrets from Secrets Manager, deployment circuit breaker, service auto scaling, Container Insights, ECS events in EventBridge</li>
+<li>Amazon RDS User Guide — PostgreSQL, Secrets Manager password management, parameter groups, log export, backups/PITR, Performance Insights / Database Insights</li>
+<li>AWS Secrets Manager User Guide — rotation</li>
+<li>Amazon ECR User Guide — lifecycle policies, tag immutability, image scanning</li>
+<li>Amazon CloudWatch User Guide — dashboards (and <em>Dashboard Body Structure</em> in the API Reference), metric math, alarms, Logs Insights query syntax, Embedded Metric Format</li>
+<li>AWS Backup Developer Guide — backup plans, cross-region copy</li>
+<li>IAM User Guide — OIDC identity providers, policy condition keys</li>
+<li>AWS Pricing Calculator (calculator.aws) — for your cost section</li>
+</ul>
+<p><strong>GitHub Actions</strong> (docs.github.com)</p>
+<ul>
+<li>Workflow syntax; Contexts; Expressions (status functions)</li>
+<li>Service containers → PostgreSQL</li>
+<li>Deploying to Amazon ECS (official guide)</li>
+<li>Security hardening with OpenID Connect → AWS</li>
+<li>Managing environments for deployment (required reviewers)</li>
+<li>Reusing workflows; Using secrets; Variables</li>
+<li>Action READMEs: <code>actions/checkout</code>, <code>actions/setup-python</code>, <code>hashicorp/setup-terraform</code>, <code>docker/setup-buildx-action</code>, <code>docker/build-push-action</code>, <code>aws-actions/configure-aws-credentials</code>, <code>aws-actions/amazon-ecr-login</code>, <code>aws-actions/amazon-ecs-render-task-definition</code>, <code>aws-actions/amazon-ecs-deploy-task-definition</code>, <code>aquasecurity/trivy-action</code>, <code>hadolint/hadolint-action</code>, <code>bridgecrewio/checkov-action</code>, <code>slackapi/slack-github-action</code></li>
+</ul>
+<p><strong>Containers &amp; app</strong></p>
+<ul>
+<li>Docker docs — building best practices, multi-stage builds, Compose file reference</li>
+<li>FastAPI (tutorial + testing) / Flask / Express docs; psycopg 3 or node-postgres; pytest or Jest</li>
+<li>Trivy docs (aquasecurity.github.io/trivy), Checkov docs, hadolint rules list</li>
+</ul>
+<p><strong>Observability</strong></p>
+<ul>
+<li>Grafana docs — CloudWatch data source, provisioning <strong>[Extra]</strong></li>
+<li>Google SRE Book, chapter <em>Monitoring Distributed Systems</em> (the &quot;four golden signals&quot; — quote the concept in your README and dashboards)</li>
+</ul>
+<hr>
+<h2>16. Differentiators — ranked by impact per hour</h2>
+<ol>
+<li><strong>OIDC with environment-scoped trust</strong> (no static keys; prod role only assumable after approval).</li>
+<li><strong>Build once, promote the same immutable image</strong> (SHA tags, ECR immutability).</li>
+<li><strong>Circuit-breaker auto-rollback</strong> + documented manual rollback runbook.</li>
+<li><strong>Terraform vs pipeline ownership</strong> (<code>ignore_changes</code>) explained.</li>
+<li><strong>Restore drill with measured RTO.</strong></li>
+<li><strong>Golden-signals dashboard with p95/p99 and error-rate metric math</strong>, plus alarms with deliberate <code>treat_missing_data</code>.</li>
+<li>Reusable workflow so CI and CD share the same test gates.</li>
+<li>Checkov + Trivy + gitleaks with documented, justified suppressions.</li>
+<li>Variable validation, <code>default_tags</code>, consistent naming, module READMEs.</li>
+<li>Cost section with real Pricing Calculator numbers and a Budget alarm.</li>
+<li>Grafana-as-code with CloudWatch data source (cheap way to show JD tooling).</li>
+<li>Honest &quot;known gaps and next steps&quot; section.</li>
+</ol>
+<hr>
+<h2>17. Interview preparation (R2 live demo / R3 DevOps lead)</h2>
+<p>Be ready to answer without notes:</p>
+<ul>
+<li>Walk me through what happens from <code>git push</code> to a new task serving traffic.</li>
+<li>Why ECS over EKS? What would change to move to EKS? (Ingress controller/AWS Load Balancer Controller, IRSA/Pod Identity for secrets, Helm charts, Prometheus stack, node groups vs Fargate profiles.)</li>
+<li>How does Terraform state locking work? What happens if a lock gets stuck? (<code>terraform force-unlock</code>, and why to be careful.)</li>
+<li>Workspaces vs separate roots vs separate accounts.</li>
+<li>Task execution role vs task role.</li>
+<li>How does the secret get into the container? What breaks on rotation, and how do you fix it?</li>
+<li>How does GitHub OIDC work (token, <code>aud</code>, <code>sub</code>, STS)? Why is it safer than access keys?</li>
+<li>Security group vs NACL; why private subnets; why a separate DB subnet tier.</li>
+<li>How does the ALB decide a target is healthy; what's deregistration delay; how do you get zero downtime?</li>
+<li>How would you do blue/green or canary? (ECS + CodeDeploy, weighted target groups, or ECS native blue/green.)</li>
+<li>How would you run DB migrations safely? (expand/contract pattern, migration task before deploy.)</li>
+<li>Why p95/p99 and not average latency? What alerts would page someone at 3 a.m. vs create a ticket?</li>
+<li>How would you reduce this setup's cost by 50%? (NAT is often the surprise.)</li>
+<li>Your biggest challenge in this assignment and how you debugged it.</li>
+<li>Live tasks to rehearse: add a new env var to the app end-to-end; add an alarm; scale the service; roll back to a previous revision; read a failed task's stopped reason; write a Logs Insights query on the spot.</li>
+</ul>
+<hr>
+<h2>18. Final submission checklist</h2>
+<ul>
+<li><input disabled="" type="checkbox"> Repo public, clean history, no secrets (run gitleaks on full history), <code>.gitignore</code> correct</li>
+<li><input disabled="" type="checkbox"> <code>terraform fmt</code>/<code>validate</code> clean on all roots; lock files committed</li>
+<li><input disabled="" type="checkbox"> README complete with diagram + screenshots + setup steps someone else could follow</li>
+<li><input disabled="" type="checkbox"> CI green on a PR; CD run showing staging deploy + <strong>approved</strong> production deploy</li>
+<li><input disabled="" type="checkbox"> Slack failure notification screenshot</li>
+<li><input disabled="" type="checkbox"> Two dashboards with data (screenshots)</li>
+<li><input disabled="" type="checkbox"> Alarm email received (screenshot)</li>
+<li><input disabled="" type="checkbox"> Logs: app, access (S3), system (flow logs / ECS events / RDS) — screenshots</li>
+<li><input disabled="" type="checkbox"> Secret management + backup documented (restore drill if done)</li>
+<li><input disabled="" type="checkbox"> Challenges document exported to PDF or Word</li>
+<li><input disabled="" type="checkbox"> Loom video recorded and link tested in an incognito window</li>
+<li><input disabled="" type="checkbox"> Decide teardown: keep staging up until the interviewers have reviewed (cost a few dollars/day), or destroy and rely on screenshots + video — state which in your email</li>
+<li><input disabled="" type="checkbox"> Reply email: repo link, README pointer, challenges doc attached, Loom link, a 3–4 line summary of the architecture and the 3 decisions you're proudest of</li>
+</ul>
+<p>Good luck — build the happy path first, write down every decision and every failure, and you'll walk into R2 able to defend every line because you wrote every line.</p>
+
+</body></html>
