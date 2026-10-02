@@ -23,11 +23,11 @@ output "db_secret_arn" {
 }
 
 output "application_dashboard_url" {
-  value = "https://${module.monitoring.dashboard_url}"
+  value = module.monitoring.application_dashboard_url
 }
 
 output "infrastructure_dashboard_url" {
-  value = "https://${module.monitoring.dashboard_url}"
+  value = module.monitoring.infrastructure_dashboard_url
 }
 
 

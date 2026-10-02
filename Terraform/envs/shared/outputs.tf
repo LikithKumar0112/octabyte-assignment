@@ -1,5 +1,5 @@
 output "ecr_repository_url" {
-  value = aws_ecr_repository.octabyte_ecr.repository_url
+  value = aws_ecr_repository.octabyte_assignment.repository_url
 }
 
 output "github_oidc_provider_arn" {

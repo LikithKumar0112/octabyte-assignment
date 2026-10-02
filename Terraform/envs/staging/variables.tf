@@ -1,4 +1,4 @@
-variable "project_name" {
+variable "project" {
   description = "The name of the project"
   type        = string
 }
@@ -25,6 +25,7 @@ variable "vpc_cidr" {
 
 variable "single_nat_gateway" {
   description = "Whether to use a single NAT"
+  type        = bool
 }
 
 variable "app_port" {

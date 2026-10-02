@@ -53,7 +53,7 @@ data "aws_iam_policy_document" "ecs_assume" {
 
     principals {
       type        = "Service"
-      identifiers = ["ecs.amazonaws.com"]
+      identifiers = ["ecs-tasks.amazonaws.com"]
     }
   }
 }
@@ -69,8 +69,8 @@ resource "aws_iam_role_policy_attachment" "ecs_task_execution" {
 }
 
 resource "aws_iam_role_policy" "execution_read_db_secret" {
-  name   = "${local.name_prefix}-ecs-execution-read-db-secret"
-  role   = aws_iam_role.ecs_task_execution.id
+  name = "${local.name_prefix}-ecs-execution-read-db-secret"
+  role = aws_iam_role.ecs_task_execution.id
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
@@ -113,7 +113,7 @@ resource "aws_ecs_task_definition" "app" {
 
   container_definitions = jsonencode([
     {
-      name      = "${local.name_prefix}-app"
+      name      = "app"
       image     = var.app_image
       cpu       = var.container_cpu
       memory    = var.container_memory
@@ -125,9 +125,21 @@ resource "aws_ecs_task_definition" "app" {
           protocol      = "tcp"
         }
       ]
+      environment = [
+        { name = "PORT", value = tostring(var.app_port) },
+        { name = "ENVIRONMENT", value = var.environment },
+        { name = "DB_HOST", value = var.db_address },
+        { name = "DB_PORT", value = tostring(var.db_port) },
+        { name = "DB_NAME", value = var.db_name },
+      ]
+      secrets = [
+        { name = "DB_USER", valueFrom = "${var.db_secret_arn}:username::" },
+        { name = "DB_PASSWORD", valueFrom = "${var.db_secret_arn}:password::" },
+      ]
+
       logConfiguration = {
         logDriver = "awslogs"
-        options   = {
+        options = {
           awslogs-group         = aws_cloudwatch_log_group.app.name
           awslogs-region        = var.region
           awslogs-stream-prefix = "${local.name_prefix}-app"
@@ -151,9 +163,9 @@ resource "aws_ecs_service" "app" {
   launch_type     = "FARGATE"
 
   network_configuration {
-    subnets          = var.subnet_ids
-    security_groups  = var.security_group_ids
-    assign_public_ip = true
+    subnets          = var.private_app_subnet_ids
+    security_groups  = [var.app_security_group_id]
+    assign_public_ip = false
   }
 
   load_balancer {
@@ -184,6 +196,7 @@ resource "aws_ecs_service" "app" {
     Name        = "${local.name_prefix}-app"
     Environment = var.environment
   }
+  depends_on = [var.listener_arn]
 }
 
 #autoscaling" target CPU ~60%
@@ -210,7 +223,7 @@ resource "aws_appautoscaling_policy" "cpu" {
     target_value       = var.target_cpu_utilization
     scale_in_cooldown  = var.scale_in_cooldown
     scale_out_cooldown = var.scale_out_cooldown
-  } 
+  }
 }
 
 

@@ -21,11 +21,6 @@ variable "private_app_subnet_ids" {
   type        = list(string)
 }
 
-variable "app_security_group_id" {
-  description = "The security group ID for the ECS service"
-  type        = string
-}
-
 variable "listener_arn" {
   description = "The ARN of the ALB listener"
   type        = string
@@ -87,27 +82,22 @@ variable "db_port" {
   type        = number
 }
 
-variable "db_username" {
-  description = "The username for the database"
-  type        = string
-}
-
 variable "db_secret_arn" {
   description = "The ARN of the secret containing the database password"
   type        = string
 }
 
-variable "subnet_ids" {
-  description = "The subnet IDs for the ECS service"
-  type        = list(string)
-}
-
-variable "security_group_ids" {
-  description = "The security group IDs for the ECS service"
-  type        = list(string)
-}
-
 variable "target_group_arn" {
   description = "The ARN of the target group for the ECS service"
+  type        = string
+}
+
+variable "db_name" {
+  description = "The name of the database which the app connects to"
+  type        = string
+}
+
+variable "app_security_group_id" {
+  description = "The security group ID for the ECS service"
   type        = string
 }

@@ -18,7 +18,7 @@ variable "subnet_ids" {
 variable "engine_version" {
   description = "The version of the database engine"
   type        = string
-  default     = "16.0"
+  default     = "16.15"
 }
 
 variable "instance_class" {
@@ -48,7 +48,7 @@ variable "db_name" {
 variable "db_username" {
   description = "The username for the database"
   type        = string
-  default     = "admin"
+  default     = "appadmin"
 }
 
 variable "db_sg_id" {

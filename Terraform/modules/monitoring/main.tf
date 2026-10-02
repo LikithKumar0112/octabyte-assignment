@@ -44,7 +44,7 @@ resource "aws_cloudwatch_metric_alarm" "alb_5xx_rate" {
       period      = "60"
       stat        = "Sum"
       dimensions = {
-        LoadBalancer = var.alb_name
+        LoadBalancer = var.alb_arn_suffix
       }
     }
   }
@@ -67,9 +67,9 @@ resource "aws_cloudwatch_metric_alarm" "alb_5xx_rate" {
 }
 
 resource "aws_cloudwatch_metric_alarm" "alb_p95_latency" {
-  alarm_name          = "${local.name_prefix}-alb-p95-latency"
-  namespace           = "AWS/ApplicationELB"
-  metric_name         = "TargetResponseTime"
+  alarm_name         = "${local.name_prefix}-alb-p95-latency"
+  namespace          = "AWS/ApplicationELB"
+  metric_name        = "TargetResponseTime"
   extended_statistic = "p95"
   dimensions = {
     LoadBalancer = var.alb_arn_suffix
@@ -84,11 +84,13 @@ resource "aws_cloudwatch_metric_alarm" "alb_p95_latency" {
 }
 
 resource "aws_cloudwatch_metric_alarm" "unhealthy_targets" {
-  alarm_name          = "${local.name_prefix}-unhealthy-targets"
-  namespace           = "AWS/ApplicationELB"
-  metric_name         = "UnhealthyHostCount"
+  alarm_name  = "${local.name_prefix}-unhealthy-targets"
+  namespace   = "AWS/ApplicationELB"
+  metric_name = "UnhealthyHostCount"
+  statistic = "Maximum"
   dimensions = {
     LoadBalancer = var.alb_arn_suffix
+    TargetGroup  = var.target_group_arn_suffix
   }
   comparison_operator = "GreaterThanThreshold"
   threshold           = "0"
@@ -144,95 +146,95 @@ resource "aws_cloudwatch_metric_alarm" "rds_low_storage" {
 #dashboard 1
 
 resource "aws_cloudwatch_dashboard" "application" {
-    dashboard_name = "${local.name_prefix}-application-dashboard"
-    dashboard_body = jsonencode({
-        widgets = [
-        {
-            type = "metric"
-            x    = 0
-            y    = 0
-            width = 12
-            height = 6
-            properties = {
-            metrics = [
-                [ "AWS/ApplicationELB", "HTTPCode_Target_5XX_Count", "LoadBalancer", var.alb_arn_suffix ],
-                [ ".", "RequestCount", ".", "." ]
-            ]
-            view       = "timeSeries"
-            stacked    = false
-            region     = var.region
-            title      = "ALB 5xx Error Rate"
-            }
-        },
-        {
-            type = "metric"
-            x    = 0
-            y    = 6
-            width = 12
-            height = 6
-            properties = {
-            metrics = [
-                [ "AWS/ApplicationELB", "TargetResponseTime", "LoadBalancer", var.alb_arn_suffix, { "stat": "p95" } ]
-            ]
-            view       = "timeSeries"
-            stacked    = false
-            region     = var.region
-            title      = "ALB P95 Latency"
-            }
+  dashboard_name = "${local.name_prefix}-application-dashboard"
+  dashboard_body = jsonencode({
+    widgets = [
+      {
+        type   = "metric"
+        x      = 0
+        y      = 0
+        width  = 12
+        height = 6
+        properties = {
+          metrics = [
+            ["AWS/ApplicationELB", "HTTPCode_Target_5XX_Count", "LoadBalancer", var.alb_arn_suffix],
+            [".", "RequestCount", ".", "."]
+          ]
+          view    = "timeSeries"
+          stacked = false
+          region  = var.region
+          title   = "ALB 5xx Error Rate"
         }
-        ]
-    })
+      },
+      {
+        type   = "metric"
+        x      = 0
+        y      = 6
+        width  = 12
+        height = 6
+        properties = {
+          metrics = [
+            ["AWS/ApplicationELB", "TargetResponseTime", "LoadBalancer", var.alb_arn_suffix, { "stat" : "p95" }]
+          ]
+          view    = "timeSeries"
+          stacked = false
+          region  = var.region
+          title   = "ALB P95 Latency"
+        }
+      }
+    ]
+  })
 }
 
 #dashboard 2
 
 resource "aws_cloudwatch_dashboard" "infrastructure" {
-    dashboard_name = "${local.name_prefix}-infrastructure-dashboard"
-    dashboard_body = jsonencode({
-        widgets = [
-        {
-            type = "metric"
-            x    = 0
-            y    = 0
-            width = 12
-            height = 6
-            properties = {
-            metrics = [
-                [ "AWS/ECS", "CPUUtilization", "ClusterName", var.ecs_cluster_name, "ServiceName", var.ecs_service_name ]
-            ]
-            view       = "timeSeries"
-            stacked    = false
-            region     = var.region
-            title      = "ECS CPU Utilization"
-            }
-        },
-        {
-            type = "metric"
-            x    = 0
-            y    = 6
-            width = 12
-            height = 6
-            properties = {
-            metrics = [
-                [ "AWS/RDS", "CPUUtilization", "DBInstanceIdentifier", var.db_instance_identifier ],
-                [ ".", "FreeStorageSpace", ".", "." ]
-            ]
-            view       = "timeSeries"
-            stacked    = false
-            region     = var.region
-            title      = "RDS CPU and Free Storage Space"
-            }
+  dashboard_name = "${local.name_prefix}-infrastructure-dashboard"
+  dashboard_body = jsonencode({
+    widgets = [
+      {
+        type   = "metric"
+        x      = 0
+        y      = 0
+        width  = 12
+        height = 6
+        properties = {
+          metrics = [
+            ["AWS/ECS", "CPUUtilization", "ClusterName", var.ecs_cluster_name, "ServiceName", var.ecs_service_name]
+          ]
+          view    = "timeSeries"
+          stacked = false
+          region  = var.region
+          title   = "ECS CPU Utilization"
         }
-        ]
-    })
+      },
+      {
+        type   = "metric"
+        x      = 0
+        y      = 6
+        width  = 12
+        height = 6
+        properties = {
+          metrics = [
+            ["AWS/RDS", "CPUUtilization", "DBInstanceIdentifier", var.db_instance_identifier],
+            [".", "FreeStorageSpace", ".", "."]
+          ]
+          view    = "timeSeries"
+          stacked = false
+          region  = var.region
+          title   = "RDS CPU and Free Storage Space"
+        }
+      }
+    ]
+  })
 }
 
 #saved logs insight queries
 
 resource "aws_cloudwatch_query_definition" "errors_last_hour" {
-  name           = "${local.name_prefix}-errors-last-hour"
+  name            = "${local.name_prefix}-errors-last-hour"
   log_group_names = [var.log_group_name]
-  query_string = <<QUERY
+  query_string    = <<QUERY
 fields @timestamp, @message
 | filter @message like /ERROR/
 | sort @timestamp desc
@@ -241,9 +243,9 @@ QUERY
 }
 
 resource "aws_cloudwatch_query_definition" "slow_requests_last_hour" {
-  name           = "${local.name_prefix}-slow-requests-last-hour"
+  name            = "${local.name_prefix}-slow-requests-last-hour"
   log_group_names = [var.log_group_name]
-  query_string = <<QUERY
+  query_string    = <<QUERY
 fields @timestamp, @message
 | filter @message like /SLOW/
 | sort @timestamp desc
@@ -252,9 +254,9 @@ QUERY
 }
 
 resource "aws_cloudwatch_query_definition" "requests_by_status" {
-  name           = "${local.name_prefix}-requests-by-status"
+  name            = "${local.name_prefix}-requests-by-status"
   log_group_names = [var.log_group_name]
-  query_string = <<QUERY
+  query_string    = <<QUERY
 fields @timestamp, @message
 | filter @message like /200|404|500/
 | sort @timestamp desc

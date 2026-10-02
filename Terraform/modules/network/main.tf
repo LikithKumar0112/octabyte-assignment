@@ -95,16 +95,29 @@ resource "aws_subnet" "private_db" {
 #NAT Gateway
 
 resource "aws_eip" "nat" {
-  for_each = var.single_nat_gateway ? toset([shared]) : toset(local.azs)
-  domain = "vpc"
+  for_each = var.single_nat_gateway ? toset(["shared"]) : toset(local.azs)
+  domain   = "vpc"
 
   tags = {
-    Name        = "${local.name_prefix}-nat-${count.index + 1}"
+    Name        = "${local.name_prefix}-nat-${each.key}"
     Project     = var.project
     Environment = var.environment
   }
 }
 
+resource "aws_nat_gateway" "this" {
+  for_each      = var.single_nat_gateway ? toset(["shared"]) : toset(local.azs)
+  allocation_id = aws_eip.nat[each.key].id
+  subnet_id     = var.single_nat_gateway ? values(aws_subnet.public)[0].id : aws_subnet.public[each.key].id
+
+  tags = {
+    Name        = "${local.name_prefix}-nat-${each.key}"
+    Project     = var.project
+    Environment = var.environment
+  }
+
+  depends_on = [aws_internet_gateway.this]
+}
 #route tablkes
 
 resource "aws_route_table" "public" {
@@ -134,7 +147,7 @@ resource "aws_route_table_association" "public" {
 
 resource "aws_route_table" "private" {
   for_each = toset(local.azs)
-  vpc_id = aws_vpc.this.id
+  vpc_id   = aws_vpc.this.id
 
   tags = {
     Name        = "${local.name_prefix}-private-rt"
@@ -152,7 +165,7 @@ resource "aws_route" "private_nat" {
 }
 
 resource "aws_route_table_association" "private_app" {
-  for_each = aws_subnet.private_app
+  for_each       = aws_subnet.private_app
   subnet_id      = each.value.id
   route_table_id = aws_route_table.private[each.key].id
 }
@@ -160,7 +173,7 @@ resource "aws_route_table_association" "private_app" {
 #DB tier
 
 resource "aws_route_table_association" "private_db" {
-  for_each = aws_subnet.private_db
+  for_each       = aws_subnet.private_db
   subnet_id      = each.value.id
   route_table_id = aws_route_table.private[each.key].id
 }

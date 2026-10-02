@@ -10,7 +10,7 @@ variable "region" {
   default     = "ap-south-1"
 }
 
-variable "githhub_organization" {
+variable "github_organization" {
   description = "The GitHub organization name"
   type        = string
   default     = "LikithKumar0112"

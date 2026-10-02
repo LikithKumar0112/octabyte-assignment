@@ -15,8 +15,8 @@ variable "alert_email" {
   type        = string
 }
 
-variable "alb_name" {
-  description = "The name of the Application Load Balancer"
+variable "target_group_arn_suffix" {
+  description = "The ARN suffix of the ALB target group"
   type        = string
 }
 

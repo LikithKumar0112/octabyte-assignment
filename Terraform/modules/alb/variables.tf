@@ -22,7 +22,7 @@ variable "alb_sg_id" {
   type = string
 }
 
-variable "app-port" {
+variable "app_port" {
   type    = number
   default = 8000
 }

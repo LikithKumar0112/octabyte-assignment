@@ -32,6 +32,20 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "acess_logs" {
   }
 }
 
+resource "aws_s3_bucket_policy" "acess_logs" {
+  bucket = aws_s3_bucket.acess_logs.id
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Sid       = "AllowELBWrite"
+      Effect    = "Allow"
+      Principal = { AWS = data.aws_elb_service_account.main.arn }
+      Action    = "s3:PutObject"
+      Resource  = "${aws_s3_bucket.acess_logs.arn}/alb/AWSLogs/${var.account_id}/*"
+    }]
+  })
+}
+
 resource "aws_s3_bucket_lifecycle_configuration" "acess_logs" {
   bucket = aws_s3_bucket.acess_logs.id
 
@@ -49,6 +63,7 @@ resource "aws_alb" "this" {
   name                       = "${local.name_prefix}-alb"
   load_balancer_type         = "application"
   internal                   = false
+  subnets                    = var.public_subnet_ids
   security_groups            = [var.alb_sg_id]
   drop_invalid_header_fields = true
   enable_deletion_protection = var.enable_delete_protection
@@ -68,7 +83,7 @@ resource "aws_alb" "this" {
 
 resource "aws_alb_target_group" "this" {
   name        = "${local.name_prefix}-tg"
-  port        = var.app-port
+  port        = var.app_port
   protocol    = "HTTP"
   vpc_id      = var.vpc_id
   target_type = "ip"
