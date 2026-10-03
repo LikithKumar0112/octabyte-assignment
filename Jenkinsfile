@@ -8,9 +8,9 @@ pipeline {
         stage('unittest') {
             steps {
                 sh 'echo "Running unit tests..."'
-                sh 'cd app && pip install -r requirements.txt'
-                sh 'cd app && pytest -m unit'
-                sh 'pip install pip-audit && pip-audit -r app/requirements.txt'
+                sh 'cd app && python3 -m pip install -r requirements.txt'
+                sh 'cd app && python3 -m pytest -m unit'
+                sh 'python3 -m pip install pip_audit && python3 -m pip_audit -r app/requirements.txt'
 
             }
         }
@@ -19,7 +19,7 @@ pipeline {
             steps {
                 sh 'docker-compose up -d db'
                 sh 'sleep 10'
-                sh 'cd app && DB_HOST=localhost pytest -m integration'
+                sh 'cd app && DB_HOST=localhost python3 -m pytest -m integration'
             }
             post {
                 always {
