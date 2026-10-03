@@ -48,7 +48,8 @@
           }
 
           stage('deploy to staging') {
-              when { branch 'main' }
+              when { 
+                expression { env.GIT_BRANCH == 'origin/main || env.BRANCH_NAME == 'main' } }
               steps {
                   withCredentials([usernamePassword(credentialsId: 'aws-creds', usernameVariable: 'AWS_ACCESS_KEY_ID', passwordVariable:'AWS_SECRET_ACCESS_KEY')]) {
                       sh './scripts/deploy.sh staging $IMAGE'
