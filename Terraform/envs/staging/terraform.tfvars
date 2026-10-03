@@ -1,4 +1,4 @@
-project     = "my-project"
+project     = "octabyte"
 environment = "staging"
 owner       = "Likith Kumar"
 aws_region  = "ap-south-1"
