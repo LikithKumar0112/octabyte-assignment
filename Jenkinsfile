@@ -10,6 +10,7 @@
       stages {
           stage('unittest') {
               steps {
+                  sh 'which jq; whoami; echo $PATH'
                   sh 'echo "Running unit tests..."'
                   sh 'cd app && python3 -m pip install -r requirements.txt'
                   sh 'cd app && python3 -m pytest -m unit'
@@ -59,14 +60,18 @@
           }
 
           stage('Approve Production') {
-              when { branch 'main' }
+              when {
+                    expression { env.GIT_BRANCH == 'origin/main' || env.BRANCH_NAME == 'main' }
+                }
               steps {
                   input message: 'Approve deployment to production?', ok: 'Deploy'
               }
           }
 
           stage('deploy to production') {
-              when { branch 'main' }
+              when {
+                    expression { env.GIT_BRANCH == 'origin/main' || env.BRANCH_NAME == 'main' }
+                }
               steps {
                   withCredentials([usernamePassword(credentialsId: 'aws-creds', usernameVariable: 'AWS_ACCESS_KEY_ID', passwordVariable:
   'AWS_SECRET_ACCESS_KEY')]) {
