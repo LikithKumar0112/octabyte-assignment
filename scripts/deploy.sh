@@ -9,7 +9,7 @@ exit 1
 fi
 
 if [ "$ENV" = "staging" ]; then
-PROJECT="my-project'
+PROJECT="my-project"
 else
 PROJECT-"octabyte"
 fi
