@@ -80,4 +80,12 @@
               }
           }
       }
+          post {
+          success {
+              slackSend channel: '#jenkins', color: 'good', message: "Build Successful: ${env.JOB_NAME} - ${env.BUILD_NUMBER} (<${env.BUILD_URL}|Open>)"
+          }
+          failure {
+              slackSend channel: '#jenkins', color: 'danger', message: "Build Failed: ${env.JOB_NAME} - ${env.BUILD_NUMBER} (<${env.BUILD_URL}|Open>)"
+          }
+      }
   }
