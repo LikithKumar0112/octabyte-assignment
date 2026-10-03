@@ -53,7 +53,7 @@
                 }    
               steps {
                   withCredentials([usernamePassword(credentialsId: 'aws-creds', usernameVariable: 'AWS_ACCESS_KEY_ID', passwordVariable:'AWS_SECRET_ACCESS_KEY')]) {
-                      sh './scripts/deploy.sh staging $IMAGE'
+                      sh 'bash ./scripts/deploy.sh staging $IMAGE'
                   }
               }
           }
@@ -70,7 +70,7 @@
               steps {
                   withCredentials([usernamePassword(credentialsId: 'aws-creds', usernameVariable: 'AWS_ACCESS_KEY_ID', passwordVariable:
   'AWS_SECRET_ACCESS_KEY')]) {
-                      sh './scripts/deploy.sh production $IMAGE'
+                      sh 'bash ./scripts/deploy.sh production $IMAGE'
                   }
               }
           }
