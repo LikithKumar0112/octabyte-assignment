@@ -19,7 +19,7 @@ pipeline {
             steps {
                 sh 'docker compose up -d db'
                 sh 'sleep 10'
-                sh 'cd app && DB_HOST=localhost python3 -m pytest -m integration'
+                sh 'cd app && DB_HOST=localhost DB_PORT=5430 DB_NAME=octabyte_db DB_USER=octabyte_user DB_PASSWORD=octabyte_password python3 -m pytest -m integration'
             }
             post {
                 always {
