@@ -1,11 +1,10 @@
 import pytest
 from fastapi.testclient import TestClient
 
-from src.main import app, init_db
+from src.main import app
 
 pytestmark = pytest.mark.integration
 
-init_db()
 client = TestClient(app)
 
 
