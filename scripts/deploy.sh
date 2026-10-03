@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+set -e 
 
 ENV=$1
 IMAGE=$2
@@ -11,8 +12,16 @@ fi
 if [ "$ENV" = "staging" ]; then
 PROJECT="my-project"
 else
-PROJECT-"octabyte"
+PROJECT="octabyte"
 fi
+
+else 
+PROJECT="octabyte"
+fi
+
+CLUSTER="${PROJECT}-${ENV}-ecs-cluster"
+SERVICE="${PROJECT}-${ENV}-app"
+FAMILY="${PROJECT}-${ENV}-app"
 
 aws ecs describe-task-definition --task-definition $FAMILY --query taskDefinition > task-def.json
 
