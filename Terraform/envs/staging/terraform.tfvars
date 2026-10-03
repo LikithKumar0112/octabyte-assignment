@@ -7,7 +7,7 @@ vpc_cidr           = "10.10.0.0/16"
 single_nat_gateway = true
 
 app_port  = 8000
-app_image = "my-docker-image:latest"
+app_image = "897545289989.dkr.ecr.ap-south-1.amazonaws.com/octabyte-assignment-ecr-repo:bootstrap"
 
 desired_count      = 2
 min_capacity       = 2

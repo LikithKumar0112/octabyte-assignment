@@ -1,5 +1,5 @@
 # Builde stage: install deps into environment
-FROM python:3.12-slim as builder
+FROM python:3.12-slim AS builder
 WORKDIR /build
 COPY requirements.txt .
 RUN python -m venv /venv \
@@ -7,7 +7,7 @@ RUN python -m venv /venv \
     && /venv/bin/pip install --no-cache-dir -r requirements.txt
 
 # runtime stage: copy deps from builder and app code
-FROM python:3.12-slim as runtime
+FROM python:3.12-slim AS runtime
 RUN groupadd --system --gid 1001 app \
     && useradd --system --uid 1001 --gid app --no-create-home app
 WORKDIR /app
