@@ -80,12 +80,18 @@
               }
           }
       }
-          post {
-          success {
-              slackSend channel: '#jenkins', color: 'good', message: "Build Successful: ${env.JOB_NAME} - ${env.BUILD_NUMBER} (<${env.BUILD_URL}|Open>)"
-          }
-          failure {
-              slackSend channel: '#jenkins', color: 'danger', message: "Build Failed: ${env.JOB_NAME} - ${env.BUILD_NUMBER} (<${env.BUILD_URL}|Open>)"
+post {
+      success {
+          withCredentials([string(credentialsId: 'slack-webhook-url', variable: 'SLACK_URL')]) {
+              sh 'curl -s -X POST -H "Content-type: application/json" --data "{\\"text\\":\\"Build Successful: ${JOB_NAME}
+  #${BUILD_NUMBER}\\"}" $SLACK_URL'
           }
       }
+      failure {
+          withCredentials([string(credentialsId: 'slack-webhook-url', variable: 'SLACK_URL')]) {
+              sh 'curl -s -X POST -H "Content-type: application/json" --data "{\\"text\\":\\"Build Failed: ${JOB_NAME}
+  #${BUILD_NUMBER}\\"}" $SLACK_URL'
+          }
+      }
+  }
   }
