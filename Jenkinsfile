@@ -17,13 +17,13 @@ pipeline {
         
         stage('Integration Test') {
             steps {
-                sh 'docker-compose up -d db'
+                sh 'docker compose up -d db'
                 sh 'sleep 10'
                 sh 'cd app && DB_HOST=localhost python3 -m pytest -m integration'
             }
             post {
                 always {
-                    sh 'docker-compose down'
+                    sh 'docker compose down'
                 }
             }
         }   
