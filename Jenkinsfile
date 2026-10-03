@@ -21,8 +21,7 @@
               steps {
                   sh 'docker compose up -d db'
                   sh 'sleep 10'
-                  sh 'cd app && DB_HOST=localhost DB_PORT=5430 DB_NAME=octabyte_db DB_USER=octabyte_user DB_PASSWORD=octabyte_password python3 -c "from
-  src.main import init_db; init_db()"'
+                  sh 'cd app && DB_HOST=localhost DB_PORT=5430 DB_NAME=octabyte_db DB_USER=octabyte_user DB_PASSWORD=octabyte_password python3 -c "from src.main import init_db; init_db()"'
                   sh 'cd app && DB_HOST=localhost DB_PORT=5430 DB_NAME=octabyte_db DB_USER=octabyte_user DB_PASSWORD=octabyte_password python3 -m pytest -m
   integration'
               }
@@ -42,8 +41,7 @@
 
           stage('Push docker image to ECR') {
               steps {
-                  withCredentials([usernamePassword(credentialsId: 'aws-creds', usernameVariable: 'AWS_ACCESS_KEY_ID', passwordVariable:
-  'AWS_SECRET_ACCESS_KEY')]) {
+                  withCredentials([usernamePassword(credentialsId: 'aws-creds', usernameVariable: 'AWS_ACCESS_KEY_ID', passwordVariable:'AWS_SECRET_ACCESS_KEY')]) {
                       sh 'aws ecr get-login-password --region ap-south-1 | docker login --username AWS --password-stdin $ECR_REGISTRY'
                       sh 'docker push $IMAGE'
                   }
@@ -53,8 +51,7 @@
           stage('deploy to staging') {
               when { branch 'main' }
               steps {
-                  withCredentials([usernamePassword(credentialsId: 'aws-creds', usernameVariable: 'AWS_ACCESS_KEY_ID', passwordVariable:
-  'AWS_SECRET_ACCESS_KEY')]) {
+                  withCredentials([usernamePassword(credentialsId: 'aws-creds', usernameVariable: 'AWS_ACCESS_KEY_ID', passwordVariable:'AWS_SECRET_ACCESS_KEY')]) {
                       sh './scripts/deploy.sh staging $IMAGE'
                   }
               }
