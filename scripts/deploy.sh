@@ -8,9 +8,11 @@ echo "usage: ./deploy.sh <staging|production> <image-uri>"
 exit 1
 fi
 
-CLUSTER="my-project-${ENV}-ecs-cluster"
-SERVICE="my-project-${ENV}-app"
-FAMILY="my-project-${ENV}-app"
+if [ "$ENV" = "staging" ]; then
+PROJECT="my-project'
+else
+PROJECT-"octabyte"
+fi
 
 aws ecs describe-task-definition --task-definition $FAMILY --query taskDefinition > task-def.json
 
