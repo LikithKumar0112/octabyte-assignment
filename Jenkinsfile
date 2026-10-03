@@ -1,7 +1,8 @@
 pipeline {
     agent any
     environment {
-        IMAGE = "${ECR_REPO}:${env.GIT_COMMIT.take(7)}"
+        ECR_REGISTRY = "897545289989.dkr.ecr.ap-south-1.amazonaws.com"
+        IMAGE = "${ECR_REGISTRY}/octabyte-assignment-ecr-repo:${env.GIT_COMMIT.take(7)}"
     }
 
     stages {
@@ -39,7 +40,7 @@ pipeline {
         stage('Push docker image to ECR') {
             steps {
                 withAWS(credentials: 'aws-creds', region: 'ap-south-1') {
-                    sh 'aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REPO'
+                    sh 'aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REGISTRY'
                     sh 'docker push $IMAGE'
                 }
             }
