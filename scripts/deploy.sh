@@ -15,10 +15,6 @@ else
 PROJECT="octabyte"
 fi
 
-else 
-PROJECT="octabyte"
-fi
-
 CLUSTER="${PROJECT}-${ENV}-ecs-cluster"
 SERVICE="${PROJECT}-${ENV}-app"
 FAMILY="${PROJECT}-${ENV}-app"
