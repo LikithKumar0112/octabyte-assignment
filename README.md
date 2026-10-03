@@ -179,81 +179,81 @@ A Slack message posts to `#jenkins` on every build success/failure via an Incomi
 
 | | |
 |---|---|
-| App reachable via its ALB URL | ![application via internet](application%20via%20internet.png) |
-| `/health` and `/api/items` responding | ![health and api](health%20and%20api.png) |
+| App reachable via its ALB URL | ![application via internet](screenshots/application%20via%20internet.png) |
+| `/health` and `/api/items` responding | ![health and api](screenshots/health%20and%20api.png) |
 
 ### Networking
 
 | | |
 |---|---|
-| VPC and subnets across AZs | ![network vpc](network%20vpc.png) |
-| Public route table → Internet Gateway | ![route table public](rout%20table%20public.png) |
-| Private route table → NAT Gateway | ![private rt](privarte%20rt.png) |
-| NAT Gateway | ![NAT](NAT.png) |
+| VPC and subnets across AZs | ![network vpc](screenshots/network%20vpc.png) |
+| Public route table → Internet Gateway | ![route table public](screenshots/rout%20table%20public.png) |
+| Private route table → NAT Gateway | ![private rt](screenshots/privarte%20rt.png) |
+| NAT Gateway | ![NAT](screenshots/NAT.png) |
 
 ### Security groups
 
 | | |
 |---|---|
-| All three security groups | ![security groups](security%20groups.png) |
-| Inbound rule referencing another SG (not a CIDR) | ![inbound RT of SG](inboud%20RT%20of%20SG.png) |
+| All three security groups | ![security groups](screenshots/security%20groups.png) |
+| Inbound rule referencing another SG (not a CIDR) | ![inbound RT of SG](screenshots/inboud%20RT%20of%20SG.png) |
 
 ### Load balancer and compute
 
 | | |
 |---|---|
-| Application Load Balancer | ![ALB](ALB.png) |
-| Target group health | ![Target Groups](Target%20Groups.png) |
-| ECS cluster/service | ![ecs container](ecs%20container.png) |
-| ECS tasks running | ![ecs service task](ecs%20service%20task.png) |
-| ECS task definition revision | ![task definition](task%20defination.png) |
+| Application Load Balancer | ![ALB](screenshots/ALB.png) |
+| Target group health | ![Target Groups](screenshots/Target%20Groups.png) |
+| ECS cluster/service | ![ecs container](screenshots/ecs%20container.png) |
+| ECS tasks running | ![ecs service task](screenshots/ecs%20service%20task.png) |
+| ECS task definition revision | ![task definition](screenshots/task%20defination.png) |
 
 ### Database and secrets
 
 | | |
 |---|---|
-| RDS instance | ![rds](rds.png) |
-| RDS backup/maintenance configuration | ![rds maintenance and backup](rds%20maintainence%20and%20backup.png) |
-| Secrets Manager entry for the DB credential | ![secret manager](secret%20manager.png) |
+| RDS instance | ![rds](screenshots/rds.png) |
+| RDS backup/maintenance configuration | ![rds maintenance and backup](screenshots/rds%20maintainence%20and%20backup.png) |
+| Secrets Manager entry for the DB credential | ![secret manager](screenshots/secret%20manager.png) |
 
 ### Images
 
 | | |
 |---|---|
-| ECR repository with immutable, SHA-tagged images | ![ECR image](ECR%20image.png) |
+| ECR repository with immutable, SHA-tagged images | ![ECR image](screenshots/ECR%20image.png) |
 
 ### Monitoring and logs
 
 | | |
 |---|---|
-| Application dashboard | ![application dashboard](appn%20dashboard%20cloud%20watch.png) |
-| Infrastructure dashboard | ![infra dashboard](infra%20dashboard.png) |
-| CloudWatch alarms | ![alarms](alarams.png) |
-| ECS application logs | ![logs ecs](logs%20ecs.png) |
+| Application dashboard | ![application dashboard](screenshots/appn%20dashboard%20cloud%20watch.png) |
+| Infrastructure dashboard | ![infra dashboard](screenshots/infra%20dashboard.png) |
+| CloudWatch alarms | ![alarms](screenshots/alarams.png) |
+| ECS application logs | ![logs ecs](screenshots/logs%20ecs.png) |
 
 ### State management
 
 | | |
 |---|---|
-| Terraform state bucket (versioning enabled) | ![state bucket](state%20bucket.png) |
+| Terraform state bucket (versioning enabled) | ![state bucket](screenshots/state%20bucket.png) |
 
 ### Terraform apply
 
 | | |
 |---|---|
-| Production environment applying cleanly | ![prod apply](prod%20apply.png) |
+| Production environment applying cleanly | ![prod apply](screenshots/prod%20apply.png) |
 
 ### CI/CD pipeline
 
 | | |
 |---|---|
-| Full pipeline — every stage green | ![jenkins pipeline](jenkins%20pipeline.png) |
-| Unit + integration tests passing | ![pytest](pytest.png) |
-| Dependency vulnerability scan (`pip-audit`) | ![pip audit](pip%20audit.png) |
-| Container vulnerability scan (Trivy) | ![trivy table](trivy%20table.png) |
-| Image pushed to ECR | ![docker ecr push](docker%20ecr%20push.png) |
-| **Manual approval gate — pipeline paused, waiting for a human to click Deploy** | ![jenkins pipeline approve or abort](jenkins%20pipeline..approve%20or%20abort.png) |
-| Slack notification on build completion | ![slack integration](slack%20integration.png) |
+| Full pipeline — every stage green | ![jenkins pipeline](screenshots/jenkins%20pipeline.png) |
+| Unit + integration tests passing | ![pytest](screenshots/pytest.png) |
+| Dependency vulnerability scan (`pip-audit`) | ![pip audit](screenshots/pip%20audit.png) |
+| Container vulnerability scan (Trivy) | ![trivy table](screenshots/trivy%20table.png) |
+| Image pushed to ECR | ![docker ecr push](screenshots/docker%20ecr%20push.png) |
+| **Manual approval gate — pipeline paused, waiting for a human to click Deploy** | ![jenkins pipeline approve or abort](screenshots/jenkins%20pipeline..approve%20or%20abort.png) |
+| Slack notification on build completion | ![slack integration](screenshots/slack%20integration.png) |
 
 ## Known challenges
 
