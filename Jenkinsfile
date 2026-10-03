@@ -2,6 +2,7 @@ pipeline {
     agent any
     environment {
         IMAGE = "${ECR_REPO}:${env.GIT_COMMIT.take(7)}"
+    }
 
     stages {
         stage('unittest') {
@@ -13,6 +14,7 @@ pipeline {
 
             }
         }
+        
         stage('Integration Test') {
             steps {
                 sh 'docker-compose up -d db'
@@ -25,18 +27,23 @@ pipeline {
                 }
             }
         }   
+        
         stage('Build and scan docker image') {
             steps {
                 sh 'docker build -t $IMAGE app'
                 sh 'trivy image --severity CRITICAL,HIGH --exit-code 1 $IMAGE'
             }
         }
+        
         stage('Push docker image to ECR') {
             steps {
-                sh 'aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REPO'
-                sh 'docker push $IMAGE'
+                withAWS(credentials: 'aws-creds', region: 'ap-south-1') {
+                    sh 'aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REPO'
+                    sh 'docker push $IMAGE'
+                }
             }
         }
+        
         stage('deploy to staging') {
             when {
                 branch 'main'
@@ -48,6 +55,7 @@ pipeline {
             }
 
         }
+        
         stage('Approve Production') {
             when {
                 branch 'main'
@@ -56,6 +64,7 @@ pipeline {
                 input message: 'Approve deployment to production?', ok: 'Deploy'
             }
         }
+        
         stage('deploy to production') {
             when {
                 branch 'main'
@@ -67,7 +76,6 @@ pipeline {
             }
         }
     }
-}
 
 post {
     success {
