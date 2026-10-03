@@ -247,13 +247,11 @@ A Slack message posts to `#jenkins` on every build success/failure via an Incomi
 
 | | |
 |---|---|
-| Full pipeline — every stage green | ![jenkins pipeline](jenkins%20pipeline.png) |
 | Unit + integration tests passing | ![pytest](pytest.png) |
 | Dependency vulnerability scan (`pip-audit`) | ![pip audit](pip%20audit.png) |
 | Container vulnerability scan (Trivy) | ![trivy table](trivy%20table.png) |
 | Image pushed to ECR | ![docker ecr push](docker%20ecr%20push.png) |
 | **Manual approval gate — pipeline paused, waiting for a human to click Deploy** | ![jenkins pipeline approve or abort](jenkins%20pipeline..approve%20or%20abort.png) |
-| Slack notification on build completion | ![slack integration](slack%20integration.png) |
 
 ## Known challenges
 
@@ -276,4 +274,3 @@ Then empty and delete the manually-created state bucket from the S3 console if y
 - Separate AWS accounts for staging/production under AWS Organizations.
 - Proper DB schema migrations (Alembic) instead of create-on-startup.
 - Bump `fastapi`/`starlette` to versions without the known CVEs currently left as advisory-only in the dependency scan.
-
