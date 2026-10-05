@@ -83,14 +83,12 @@
 post {
       success {
           withCredentials([string(credentialsId: 'slack-webhook-url', variable: 'SLACK_URL')]) {
-              sh 'curl -s -X POST -H "Content-type: application/json" --data "{\\"text\\":\\"Build Successful: ${JOB_NAME}
-  #${BUILD_NUMBER}\\"}" $SLACK_URL'
+              sh 'curl -s -X POST -H "Content-type: application/json" --data "{\\"text\\":\\"Build Successful: ${JOB_NAME} #${BUILD_NUMBER}\\"}" $SLACK_URL'
           }
       }
       failure {
           withCredentials([string(credentialsId: 'slack-webhook-url', variable: 'SLACK_URL')]) {
-              sh 'curl -s -X POST -H "Content-type: application/json" --data "{\\"text\\":\\"Build Failed: ${JOB_NAME}
-  #${BUILD_NUMBER}\\"}" $SLACK_URL'
+              sh 'curl -s -X POST -H "Content-type: application/json" --data "{\\"text\\":\\"Build Failed: ${JOB_NAME} #${BUILD_NUMBER}\\"}" $SLACK_URL'
           }
       }
   }

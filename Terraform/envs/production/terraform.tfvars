@@ -15,7 +15,9 @@ log_retention_days = 30
 db_instance_class        = "db.t3.micro"
 db_multi_az              = true
 db_backup_retention_days = 0
-db_deletion_protection   = true
+db_deletion_protection   = false
 db_skip_final_snapshot   = false
+
+enable_deletion_protection = false
 
 alert_email = "likith04kumar@gmail.com"

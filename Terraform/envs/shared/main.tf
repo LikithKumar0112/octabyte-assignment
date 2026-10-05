@@ -119,7 +119,7 @@ resource "aws_iam_role_policy" "deploy" {
           "ecs:UpdateService",
           "ecs:DescribeServices",
         ]
-        Resource = "*" # ECS task-definition/service actions don't support resource-level scoping this way
+        Resource = "*" 
       },
       {
         Sid      = "PassEcsRoles"
