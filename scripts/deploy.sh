@@ -9,11 +9,7 @@ echo "usage: ./deploy.sh <staging|production> <image-uri>"
 exit 1
 fi
 
-if [ "$ENV" = "staging" ]; then
-PROJECT="my-project"
-else
 PROJECT="octabyte"
-fi
 
 CLUSTER="${PROJECT}-${ENV}-ecs-cluster"
 SERVICE="${PROJECT}-${ENV}-app"
